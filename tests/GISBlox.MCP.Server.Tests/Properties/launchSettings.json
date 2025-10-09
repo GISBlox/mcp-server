@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "GISBlox.MCP.Server.Tests": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "GISBLOX_SERVICE_KEY": "CB7E92BD91B3512F52995E6018FE74DB73975B9F"
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schemas/draft/2025-07-09/server.json",
+  "servers": {
+    "gisblox-mcp": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "src/GISBlox.MCP.Server/GISBlox.MCP.Server.csproj"
+      ]
+    }
+  }
+}
