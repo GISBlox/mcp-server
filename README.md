@@ -57,7 +57,7 @@ Try these prompts after setting up the MCP server:
 ### Projection
 - "Reproject this RDPoint (85530, 446100) to a WGS84 coordinate"
 
-👉 Also available is our [GISBlox MCP Prompt Pack](https://github.com/GISBlox) with reusable prompts for various use cases.
+👉 Also available is our [GISBlox MCP Prompt Pack](https://github.com/GISBlox/mcp-prompt-pack) with reusable prompts for various use cases.
 
 ## 🛠️ Tools
 
@@ -92,8 +92,8 @@ Generates visual representations of geospatial data. Capabilities include:
 
 ## 🆘 Getting Support
 
-- [Ask questions, share ideas](https://github.com/GISBlox/mcp/discussions)
-- [Create an issue](https://github.com/GISBlox/mcp/issues)
+- [Ask questions, share ideas](https://github.com/GISBlox/mcp-server/discussions)
+- [Create an issue](https://github.com/GISBlox/mcp-server/issues)
 
 
 ## 📚 Additional Resources
