@@ -7,7 +7,6 @@ using GISBlox.Services.SDK.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -146,7 +145,7 @@ namespace GISBlox.MCP.Server.Tests
         {
             string wkt = "POINT(121843 487293)";
             int buffer = 200;   // meters, since CS of WKT is 28992.
-            PostalCode4Record record = await PostalCodeTools.GetPostalCode4ByGeometry(_client, wkt, buffer, CoordinateSystem.RDNew, CoordinateSystem.WGS84, CancellationToken.None);
+            PostalCode4Record record = await PostalCodeTools.GetPostalCode4ByGeometry(_client, wkt, buffer, (int)CoordinateSystem.RDNew, (int)CoordinateSystem.WGS84, CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
             Assert.IsTrue(record.PostalCode.Count == 2);
@@ -279,7 +278,7 @@ namespace GISBlox.MCP.Server.Tests
         {
             string wkt = "POINT(121843 487293)";
             int buffer = 50;   // meters, since CS of WKT is 28992.
-            PostalCode6Record record = await PostalCodeTools.GetPostalCode6ByGeometry(_client, wkt, buffer, CoordinateSystem.RDNew, CoordinateSystem.WGS84, CancellationToken.None);
+            PostalCode6Record record = await PostalCodeTools.GetPostalCode6ByGeometry(_client, wkt, buffer, (int)CoordinateSystem.RDNew, (int)CoordinateSystem.WGS84, CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
             Assert.IsTrue(record.PostalCode.Count == 12);
@@ -305,7 +304,7 @@ namespace GISBlox.MCP.Server.Tests
 
             string expectedPostalCode = "2809RA";
 
-            PostalCode6Record record = await PostalCodeTools.GetPostalCode6ByArea(_client, gemeenteId, wijkId, buurtId, CoordinateSystem.WGS84, CancellationToken.None);
+            PostalCode6Record record = await PostalCodeTools.GetPostalCode6ByArea(_client, gemeenteId, wijkId, buurtId, (int)CoordinateSystem.WGS84, CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
 
