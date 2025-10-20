@@ -36,7 +36,7 @@ Each MCP client has its own configuration process for the hosted MCP server. Bel
     }
   ```
 
-Refer to the [GISBlox documentation](https://docs.gisblox.com/docs/getting-started/service-keys) for more information on obtaining a service key.
+Refer to the [README](..\README.md#%EF%B8%8F-usage) for more information on obtaining a service key.
 
 3. Save the configuration.
 4. Start the MCP service in VS Code if needed:
@@ -154,7 +154,7 @@ For programmatic integration, you can call the hosted MCP server directly using 
 
 ### 3.1 Prerequisites
 
-- Valid [GISBlox Service Key](https://docs.gisblox.com/docs/getting-started/service-keys)
+- Valid [GISBlox Service Key](..\README.md#%EF%B8%8F-usage)
 - HTTP client (curl, Node.js fetch, Python requests, Bruno, Postman, etc.)
 
 ### 3.2 Protocol
