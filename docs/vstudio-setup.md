@@ -15,7 +15,7 @@ Refer to the [Hosted MCP Server setup guide](hosted-mcp-setup.md) if you do not 
 
 2. Either add your service key to the `GISBLOX_SERVICE_KEY` property in the `env` section of the file, or add it as a system environment variable. 
    
-   Refer to the [README](README.md#%EF%B8%8F-usage) for more information on obtaining a service key.
+   Refer to the [README](../README.md#%EF%B8%8F-usage) for more information on obtaining a service key.
 
    ```json
     {
