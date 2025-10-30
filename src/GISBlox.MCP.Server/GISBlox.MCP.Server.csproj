@@ -20,17 +20,17 @@
     <Company>Bartels Online</Company>
     <Authors>Karlo Bartels</Authors>
     <PackageProjectUrl>https://github.com/GISBlox/mcp-server</PackageProjectUrl>
-    <Version>1.0.3.1</Version>
+    <Version>1.0.4</Version>
   </PropertyGroup>
 
   <!-- Include additional files for browsing the MCP server. -->
 
   <ItemGroup>
-    <PackageReference Include="GISBlox.Services.SDK" Version="2.4.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-rc.1.25451.107" />
-    <PackageReference Include="ModelContextProtocol" Version="0.4.0-preview.1" />
-    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.4.0-preview.1" />
-    <PackageReference Include="System.Text.Json" Version="10.0.0-rc.1.25451.107" />
+    <PackageReference Include="GISBlox.Services.SDK" Version="2.5.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-rc.2.25502.107" />
+    <PackageReference Include="ModelContextProtocol" Version="0.4.0-preview.3" />
+    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.4.0-preview.3" />
+    <PackageReference Include="System.Text.Json" Version="10.0.0-rc.2.25502.107" />
   </ItemGroup>
 
   <ItemGroup>
