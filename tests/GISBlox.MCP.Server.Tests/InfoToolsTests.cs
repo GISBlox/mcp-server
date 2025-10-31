@@ -48,7 +48,7 @@ namespace GISBlox.MCP.Server.Tests
                 Console.WriteLine($"\r\nName: {sub.Name} \r\nDescription: {sub.Description} \r\nRegistration date: {sub.RegisterDate} Expiration date: {sub.ExpirationDate} Expired: {sub.Expired}"));
 
             Assert.IsNotNull(subscriptions, "Response is null.");
-            Assert.IsTrue(subscriptions.Count != 0, "No subscriptions returned.");
+            Assert.AreNotEqual(0, subscriptions.Count, "No subscriptions returned.");
         }
     }
 }

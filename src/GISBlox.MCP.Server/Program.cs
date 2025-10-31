@@ -104,6 +104,7 @@ if (httpEnabled)
 var app = builder.Build();
 
 // Validate and log transport settings
+app.Logger.LogInformation("[MCP-Startup] serviceUrl={serviceUrl}", serviceUrl);
 app.Logger.LogInformation("[MCP-Startup] stdioEnabled={StdioEnabled} httpEnabled={HttpEnabled} runningOnCloud={RunningOnCloud} forceStdio={ForceStdio}",
     stdioEnabled, httpEnabled, runningOnCloud, forceStdio);
 

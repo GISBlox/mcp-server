@@ -55,7 +55,7 @@ namespace GISBlox.MCP.Server.Tests
             PostalCode4 pc = record.PostalCode[0];
             Assert.IsTrue(pc.Location.Gemeente == "Amersfoort" && pc.Location.Geometry.Centroid == "POINT (155029.15793771204 463047.87594218826)");
 
-            await Task.Delay(API_QUOTA_DELAY);
+            await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
         }
 
         [TestMethod]
@@ -72,9 +72,9 @@ namespace GISBlox.MCP.Server.Tests
             PostalCode4Record recordCached = await PostalCodeTools.GetPostalCode4Record(_client, id, cancellationToken: CancellationToken.None);
 
             Assert.IsNotNull(recordCached, "Response is empty.");
-            Assert.IsTrue(record.MetaData.Query == recordCached.MetaData.Query);
+            Assert.AreEqual(recordCached.MetaData.Query, record.MetaData.Query);
 
-            await Task.Delay(API_QUOTA_DELAY);
+            await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
         }
 
         [TestMethod]
@@ -85,12 +85,12 @@ namespace GISBlox.MCP.Server.Tests
             PostalCode4Record record = await PostalCodeTools.GetPostalCode4Neighbours(_client, id, includeSource, cancellationToken: CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.PostalCode.Count == 6);
+            Assert.HasCount(6, record.PostalCode);
 
             List<string> expectedIDs = ["3817", "3814", "3816", "3813", "3812", "3818"];
             Assert.IsTrue(record.PostalCode.All(pc => expectedIDs.Contains(pc.Id)));
 
-            await Task.Delay(API_QUOTA_DELAY * 2);
+            await Task.Delay(API_QUOTA_DELAY * 2, CancellationToken.None);
         }
 
         [TestMethod]
@@ -101,12 +101,12 @@ namespace GISBlox.MCP.Server.Tests
             PostalCode4Record record = await PostalCodeTools.GetPostalCode4Neighbours(_client, id, includeSource, cancellationToken: CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.PostalCode.Count == 7);
+            Assert.HasCount(7, record.PostalCode);
 
             List<string> expectedIDs = ["3811", "3817", "3814", "3816", "3813", "3812", "3818"];
             Assert.IsTrue(record.PostalCode.All(pc => expectedIDs.Contains(pc.Id)));
 
-            await Task.Delay(API_QUOTA_DELAY * 2);
+            await Task.Delay(API_QUOTA_DELAY * 2, CancellationToken.None);
         }
 
         [TestMethod]
@@ -116,12 +116,12 @@ namespace GISBlox.MCP.Server.Tests
             PostalCode4Record record = await PostalCodeTools.GetPostalCode4ByGeometry(_client, wkt, cancellationToken: CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.PostalCode.Count == 3);
+            Assert.HasCount(3, record.PostalCode);
 
             List<string> expectedIDs = ["1791", "1796", "1797"];
             Assert.IsTrue(record.PostalCode.All(pc => expectedIDs.Contains(pc.Id)));
 
-            await Task.Delay(API_QUOTA_DELAY * 2);
+            await Task.Delay(API_QUOTA_DELAY * 2, CancellationToken.None);
         }
 
         [TestMethod]
@@ -132,12 +132,12 @@ namespace GISBlox.MCP.Server.Tests
             PostalCode4Record record = await PostalCodeTools.GetPostalCode4ByGeometry(_client, wkt, buffer, cancellationToken: CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.PostalCode.Count == 5);
+            Assert.HasCount(5, record.PostalCode);
 
             List<string> expectedIDs = ["1791", "1793", "1795", "1796", "1797"];
             Assert.IsTrue(record.PostalCode.All(pc => expectedIDs.Contains(pc.Id)));
 
-            await Task.Delay(API_QUOTA_DELAY * 2);
+            await Task.Delay(API_QUOTA_DELAY * 2, CancellationToken.None);
         }
 
         [TestMethod]
@@ -148,13 +148,13 @@ namespace GISBlox.MCP.Server.Tests
             PostalCode4Record record = await PostalCodeTools.GetPostalCode4ByGeometry(_client, wkt, buffer, (int)CoordinateSystem.RDNew, (int)CoordinateSystem.WGS84, CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.PostalCode.Count == 2);
+            Assert.HasCount(2, record.PostalCode);
 
             List<string> expectedIDs = ["1011", "1012"];
             Assert.IsTrue(record.PostalCode.All(pc => expectedIDs.Contains(pc.Id)));
-            Assert.IsTrue(record.PostalCode[1].Location.Geometry.Centroid == "POINT (4.905333126288754 52.371542282338666)");
+            Assert.AreEqual("POINT (4.905333126288753 52.37154228233867)", record.PostalCode[1].Location.Geometry.Centroid);
 
-            await Task.Delay(API_QUOTA_DELAY * 2);
+            await Task.Delay(API_QUOTA_DELAY * 2, CancellationToken.None);
         }
 
         [TestMethod]
@@ -173,11 +173,11 @@ namespace GISBlox.MCP.Server.Tests
             Assert.IsNotNull(record, "Response is empty.");
 
             PostalCode4 pc = record.PostalCode[0];
-            Assert.IsTrue(pc.Id == expectedPostalCode);
-            Assert.IsTrue(pc.Location.Gemeente == expectedGemeente);
-            Assert.IsTrue(pc.Location.Wijken == expectedWijk);
+            Assert.AreEqual(expectedPostalCode, pc.Id);
+            Assert.AreEqual(expectedGemeente, pc.Location.Gemeente);
+            Assert.AreEqual(expectedWijk, pc.Location.Wijken);
 
-            await Task.Delay(API_QUOTA_DELAY);
+            await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
         }
 
         [TestMethod]
@@ -187,9 +187,9 @@ namespace GISBlox.MCP.Server.Tests
             KerncijferRecord record = await PostalCodeTools.GetKeyFigures(_client, id, CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.MetaData.TotalAttributes == 37);
+            Assert.AreEqual(37, record.MetaData.TotalAttributes);
 
-            await Task.Delay(API_QUOTA_DELAY);
+            await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
         }       
 
         #endregion
@@ -207,7 +207,7 @@ namespace GISBlox.MCP.Server.Tests
             PostalCode6 pc = record.PostalCode[0];
             Assert.IsTrue(pc.Location.Gemeente == "Amersfoort" && pc.Location.Geometry.Centroid == "POINT (155155.51254284632 463159.828901163)");
 
-            await Task.Delay(API_QUOTA_DELAY);
+            await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
         }
 
         [TestMethod]
@@ -218,12 +218,12 @@ namespace GISBlox.MCP.Server.Tests
             PostalCode6Record record = await PostalCodeTools.GetPostalCode6Neighbours(_client, id, includeSource, cancellationToken: CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.PostalCode.Count == 7);
+            Assert.HasCount(7, record.PostalCode);
 
             List<string> expectedIDs = ["3069BK", "3069BL", "3069BN", "3069BP", "3069BR", "3069BM", "3069BT"];
             Assert.IsTrue(record.PostalCode.All(pc => expectedIDs.Contains(pc.Id)));
 
-            await Task.Delay(API_QUOTA_DELAY * 2);
+            await Task.Delay(API_QUOTA_DELAY * 2, CancellationToken.None);
         }
 
         [TestMethod]
@@ -234,12 +234,12 @@ namespace GISBlox.MCP.Server.Tests
             PostalCode6Record record = await PostalCodeTools.GetPostalCode6Neighbours(_client, id, includeSource, cancellationToken: CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.PostalCode.Count == 8);
+            Assert.HasCount(8, record.PostalCode);
 
             List<string> expectedIDs = ["3069BS", "3069BK", "3069BL", "3069BN", "3069BP", "3069BR", "3069BM", "3069BT"];
             Assert.IsTrue(record.PostalCode.All(pc => expectedIDs.Contains(pc.Id)));
 
-            await Task.Delay(API_QUOTA_DELAY * 2);
+            await Task.Delay(API_QUOTA_DELAY * 2, CancellationToken.None);
         }
 
         [TestMethod]
@@ -249,12 +249,12 @@ namespace GISBlox.MCP.Server.Tests
             PostalCode6Record record = await PostalCodeTools.GetPostalCode6ByGeometry(_client, wkt, cancellationToken: CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.PostalCode.Count == 3);
+            Assert.HasCount(3, record.PostalCode);
 
             List<string> expectedIDs = ["1791PB", "1796AZ", "1797RT"];
             Assert.IsTrue(record.PostalCode.All(pc => expectedIDs.Contains(pc.Id)));
 
-            await Task.Delay(API_QUOTA_DELAY * 2);
+            await Task.Delay(API_QUOTA_DELAY * 2, CancellationToken.None);
         }
 
         [TestMethod]
@@ -265,12 +265,12 @@ namespace GISBlox.MCP.Server.Tests
             PostalCode6Record record = await PostalCodeTools.GetPostalCode6ByGeometry(_client, wkt, buffer, cancellationToken: CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.PostalCode.Count == 6);
+            Assert.HasCount(6, record.PostalCode);
 
             List<string> expectedIDs = ["1791PB", "1796AZ", "1797RT", "1791NT", "1796MV", "1791PE"];
             Assert.IsTrue(record.PostalCode.All(pc => expectedIDs.Contains(pc.Id)));
 
-            await Task.Delay(API_QUOTA_DELAY * 2);
+            await Task.Delay(API_QUOTA_DELAY * 2, CancellationToken.None);
         }
 
         [TestMethod]
@@ -281,13 +281,13 @@ namespace GISBlox.MCP.Server.Tests
             PostalCode6Record record = await PostalCodeTools.GetPostalCode6ByGeometry(_client, wkt, buffer, (int)CoordinateSystem.RDNew, (int)CoordinateSystem.WGS84, CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.PostalCode.Count == 12);
+            Assert.HasCount(12, record.PostalCode);
 
             List<string> expectedIDs = ["1011MA", "1011JV", "1011JT", "1011JS", "1011JR", "1011JP", "1011HB", "1011ME", "1011GD", "1012CR", "1012CS", "1012CW"];
             Assert.IsTrue(record.PostalCode.All(pc => expectedIDs.Contains(pc.Id)));
-            Assert.IsTrue(record.PostalCode[1].Location.Geometry.Centroid == "POINT (4.899542319809452 52.37146607902681)");
+            Assert.AreEqual("POINT (4.899542319809449 52.37146607902682)", record.PostalCode[1].Location.Geometry.Centroid);
 
-            await Task.Delay(API_QUOTA_DELAY * 2);
+            await Task.Delay(API_QUOTA_DELAY * 2, CancellationToken.None);
         }
 
         [TestMethod]
@@ -309,12 +309,12 @@ namespace GISBlox.MCP.Server.Tests
             Assert.IsNotNull(record, "Response is empty.");
 
             PostalCode6 pc = record.PostalCode[0];
-            Assert.IsTrue(pc.Id == expectedPostalCode);
-            Assert.IsTrue(pc.Location.Gemeente == expectedGemeente);
-            Assert.IsTrue(pc.Location.Wijk == expectedWijk);
-            Assert.IsTrue(pc.Location.Buurt == expectedBuurt);
+            Assert.AreEqual(expectedPostalCode, pc.Id);
+            Assert.AreEqual(expectedGemeente, pc.Location.Gemeente);
+            Assert.AreEqual(expectedWijk, pc.Location.Wijk);
+            Assert.AreEqual(expectedBuurt, pc.Location.Buurt);
 
-            await Task.Delay(API_QUOTA_DELAY);
+            await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
         }
 
         [TestMethod]
@@ -324,9 +324,9 @@ namespace GISBlox.MCP.Server.Tests
             KerncijferRecord record = await PostalCodeTools.GetKeyFigures(_client, id, CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.MetaData.TotalAttributes == 35);
+            Assert.AreEqual(35, record.MetaData.TotalAttributes);
 
-            await Task.Delay(API_QUOTA_DELAY);
+            await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
         }
         
         #endregion

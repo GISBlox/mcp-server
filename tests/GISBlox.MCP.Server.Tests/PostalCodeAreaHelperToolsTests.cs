@@ -49,9 +49,9 @@ namespace GISBlox.MCP.Server.Tests
             GWB gemeente = await PostalCodeAreaCodeHelperTools.GetGemeente(_client, gemeenteNaam, CancellationToken.None);
 
             Assert.IsNotNull(gemeente, "Response is empty.");
-            Assert.IsTrue(gemeente.ID == gemeenteId);
+            Assert.AreEqual(gemeenteId, gemeente.ID);
 
-            await Task.Delay(API_QUOTA_DELAY);
+            await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
         }
 
         [TestMethod]
@@ -60,9 +60,9 @@ namespace GISBlox.MCP.Server.Tests
             GWBRecord record = await PostalCodeAreaCodeHelperTools.GetGemeenten(_client, CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.MetaData.TotalRecords == 345);
+            Assert.AreEqual(345, record.MetaData.TotalRecords);
 
-            await Task.Delay(API_QUOTA_DELAY);
+            await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
         }
 
         [TestMethod]
@@ -72,9 +72,9 @@ namespace GISBlox.MCP.Server.Tests
             GWBRecord record = await PostalCodeAreaCodeHelperTools.GetWijkenByGemeenteId(_client, gemeenteIdAmersfoort, CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.MetaData.TotalRecords == 33);
+            Assert.AreEqual(33, record.MetaData.TotalRecords);
 
-            await Task.Delay(API_QUOTA_DELAY);
+            await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
         }
 
         [TestMethod]
@@ -84,9 +84,9 @@ namespace GISBlox.MCP.Server.Tests
             GWBRecord record = await PostalCodeAreaCodeHelperTools.GetWijkenByGemeenteName(_client, gemeente, CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.MetaData.TotalRecords == 33);
+            Assert.AreEqual(33, record.MetaData.TotalRecords);
 
-            await Task.Delay(API_QUOTA_DELAY);
+            await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
         }
 
         [TestMethod]
@@ -96,7 +96,7 @@ namespace GISBlox.MCP.Server.Tests
             GWBRecord record = await PostalCodeAreaCodeHelperTools.GetBuurtenByWijkId(_client, wijkId, CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.MetaData.TotalRecords == 9);
+            Assert.AreEqual(9, record.MetaData.TotalRecords);
 
             string buurtnaam = "Hof";
             int expectedBuurtIdHof = 3070100;
@@ -104,9 +104,9 @@ namespace GISBlox.MCP.Server.Tests
             var buurt = record.RecordSet.SingleOrDefault(buurt => buurt.Naam == buurtnaam);
             Assert.IsNotNull(buurt, $"Buurt '{buurtnaam}' not found.");
             int buurtIdHof = buurt.ID;
-            Assert.IsTrue(buurtIdHof == expectedBuurtIdHof);
+            Assert.AreEqual(expectedBuurtIdHof, buurtIdHof);
 
-            await Task.Delay(API_QUOTA_DELAY);
+            await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
         }
 
         [TestMethod]
@@ -117,7 +117,7 @@ namespace GISBlox.MCP.Server.Tests
             GWBRecord record = await PostalCodeAreaCodeHelperTools.GetBuurtenByGemeenteAndWijkIds(_client, gemeenteIdAmersfoort, wijkIdStadskern, CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.MetaData.TotalRecords == 9);
+            Assert.AreEqual(9, record.MetaData.TotalRecords);
 
             string buurtnaam = "Hof";
             int expectedBuurtIdHof = 3070100;
@@ -125,9 +125,9 @@ namespace GISBlox.MCP.Server.Tests
             var buurt = record.RecordSet.SingleOrDefault(buurt => buurt.Naam == buurtnaam);
             Assert.IsNotNull(buurt, $"Buurt '{buurtnaam}' not found.");
             int buurtIdHof = buurt.ID;
-            Assert.IsTrue(buurtIdHof == expectedBuurtIdHof);
+            Assert.AreEqual(expectedBuurtIdHof, buurtIdHof);
 
-            await Task.Delay(API_QUOTA_DELAY);
+            await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
         }
 
         [TestMethod]
@@ -138,7 +138,7 @@ namespace GISBlox.MCP.Server.Tests
             GWBRecord record = await PostalCodeAreaCodeHelperTools.GetBuurtenByGemeenteAndWijkNames(_client, gemeente, wijk, CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.MetaData.TotalRecords == 9);
+            Assert.AreEqual(9, record.MetaData.TotalRecords);
 
             string buurtnaam = "Stadhuisplein";
             int expectedBuurtIdStadhuisplein = 3070107;
@@ -146,9 +146,9 @@ namespace GISBlox.MCP.Server.Tests
             var buurt = record.RecordSet.SingleOrDefault(buurt => buurt.Naam == buurtnaam);
             Assert.IsNotNull(buurt, $"Buurt '{buurtnaam}' not found.");
             int buurtIdHof = buurt.ID;
-            Assert.IsTrue(buurtIdHof == expectedBuurtIdStadhuisplein);
+            Assert.AreEqual(expectedBuurtIdStadhuisplein, buurtIdHof);
 
-            await Task.Delay(API_QUOTA_DELAY);
+            await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
         }
 
         [TestMethod]
@@ -159,7 +159,7 @@ namespace GISBlox.MCP.Server.Tests
             GWBRecord record = await PostalCodeAreaCodeHelperTools.GetBuurtenByGemeenteAndWijkNames(_client, gemeente, wijk, CancellationToken.None);
 
             Assert.IsNotNull(record, "Response is empty.");
-            Assert.IsTrue(record.MetaData.TotalRecords == 9);
+            Assert.AreEqual(9, record.MetaData.TotalRecords);
 
             string buurtnaam = "Stadhuisplein";
             int expectedBuurtIdStadhuisplein = 3070107;
@@ -167,13 +167,13 @@ namespace GISBlox.MCP.Server.Tests
             var buurt = record.RecordSet.SingleOrDefault(buurt => buurt.Naam == buurtnaam);
             Assert.IsNotNull(buurt, $"Buurt '{buurtnaam}' not found.");
             int buurtIdHof = buurt.ID;
-            Assert.IsTrue(buurtIdHof == expectedBuurtIdStadhuisplein);
+            Assert.AreEqual(expectedBuurtIdStadhuisplein, buurtIdHof);
 
             GWBRecord recordCached = await PostalCodeAreaCodeHelperTools.GetBuurtenByGemeenteAndWijkNames(_client, gemeente, wijk, CancellationToken.None);
             Assert.IsNotNull(recordCached, "Response is empty.");
-            Assert.IsTrue(recordCached.MetaData.TotalRecords == 9);
+            Assert.AreEqual(9, recordCached.MetaData.TotalRecords);
 
-            await Task.Delay(API_QUOTA_DELAY);
+            await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
         }
     }
 }

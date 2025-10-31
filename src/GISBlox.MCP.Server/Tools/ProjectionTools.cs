@@ -8,7 +8,7 @@ using ModelContextProtocol.Server;
 using System.ComponentModel;
 
 [McpServerToolType]
-[Description("Reprojects coordinates to WGS84 and RDNew using the GISBlox Projection API.")]
+[Description("Reprojects WGS84 coordinates to RDNew, and vice versa, using the GISBlox Projection API.")]
 internal class ProjectionTools
 {
    [McpServerTool(Name = "projection_wgs84_to_rds_get")]

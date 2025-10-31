@@ -62,7 +62,7 @@ namespace GISBlox.MCP.Server.Tests
             Assert.IsNotNull(location, "Response is empty.");
             Assert.IsTrue(location.X == 85530 && location.Y == 446100 && location.Lat == 51.998929 && location.Lon == 4.375587);
 
-            await Task.Delay(API_QUOTA_DELAY);
+            await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
         }
 
         [TestMethod]
@@ -81,7 +81,7 @@ namespace GISBlox.MCP.Server.Tests
             Assert.IsTrue(rdPoints[1].X == 75483 && rdPoints[1].Y == 568787);
             Assert.IsTrue(rdPoints[2].X == 82197 && rdPoints[2].Y == 569794);
 
-            await Task.Delay(API_QUOTA_DELAY * 2);
+            await Task.Delay(API_QUOTA_DELAY * 2, CancellationToken.None);
         }
 
         [TestMethod]
@@ -100,7 +100,7 @@ namespace GISBlox.MCP.Server.Tests
             Assert.IsTrue(loc[1].X == 75483 && loc[1].Y == 568787 && loc[1].Lat == 53.1 && loc[1].Lon == 4.2);
             Assert.IsTrue(loc[2].X == 82197 && loc[2].Y == 569794 && loc[2].Lat == 53.11 && loc[2].Lon == 4.3);
 
-            await Task.Delay(API_QUOTA_DELAY);
+            await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
         }
 
         #endregion
@@ -126,7 +126,7 @@ namespace GISBlox.MCP.Server.Tests
             Assert.IsNotNull(location, "Response is empty.");
             Assert.IsTrue(location.Lat == 51.998927449317591 && location.Lon == 4.3755841993518345 && location.X == 85530 && location.Y == 446100);
 
-            await Task.Delay(API_QUOTA_DELAY);
+            await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
         }
 
         [TestMethod]
@@ -145,7 +145,7 @@ namespace GISBlox.MCP.Server.Tests
             Assert.IsTrue(coords[1].Lat == 0 && coords[1].Lon == 0);
             Assert.IsTrue(coords[2].Lat == 52.93526683092437 && coords[2].Lon == 4.7327735938900535);
 
-            await Task.Delay(API_QUOTA_DELAY * 2);
+            await Task.Delay(API_QUOTA_DELAY * 2, CancellationToken.None);
         }
 
         [TestMethod]

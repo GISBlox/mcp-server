@@ -8,7 +8,7 @@ using ModelContextProtocol.Server;
 using System.ComponentModel;
 
 [McpServerToolType]
-[Description("Provides information about a user using the GISBlox Info API.")]
+[Description("Provides account information using the GISBlox Info API.")]
 internal class InfoTools
 {
    [McpServerTool(Name = "info_subscriptions_list")]
