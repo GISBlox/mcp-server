@@ -11,11 +11,11 @@ using System.ComponentModel;
 [Description("Provides information about a user using the GISBlox Info API.")]
 internal class InfoTools
 {
-    [McpServerTool]
-    [Description("Returns the subscriptions of the authorized GISBlox user.")]
-    public static async Task<List<Subscription>> GetSubscriptions(GISBloxClient gisbloxClient, CancellationToken cancellationToken = default)
-    {
-        return await gisbloxClient.Info.GetSubscriptions(cancellationToken);
-    }
+   [McpServerTool(Name = "info_subscriptions_list")]
+   [Description("Returns the subscriptions of the authorized GISBlox user.")]
+   public static async Task<List<Subscription>> GetSubscriptions(GISBloxClient gisbloxClient, CancellationToken cancellationToken = default)
+   {
+      return await gisbloxClient.Info.GetSubscriptions(cancellationToken);
+   }
 }
 

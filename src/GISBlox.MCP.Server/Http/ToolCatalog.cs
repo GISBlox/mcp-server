@@ -86,26 +86,13 @@ internal static partial class McpRestEndpointsExtensions
 
         private static (Type, MethodInfo, ToolDescriptorDto)? ResolveMethod(string name)
         {
-            // Accept "Method" or "Type.Method" (case-insensitive)
             var cmp = StringComparison.OrdinalIgnoreCase;
-
-            // First try exact FullName
+            // Only resolve by the attribute Name (canonical)
             var m = _methods.FirstOrDefault(m =>
-                string.Equals(m.Dto.FullName, name, cmp));
-
+                string.Equals(m.Dto.Name, name, cmp));
             if (m.Method is not null)
                 return (m.Type, m.Method, m.Dto);
-
-            // Then try simple Method name if uniquely resolvable
-            var candidates = _methods.Where(m =>
-                string.Equals(m.Dto.Name, name, cmp)).ToList();
-
-            return candidates.Count switch
-            {
-                1 => (candidates[0].Type, candidates[0].Method, candidates[0].Dto),
-                0 => null,
-                _ => throw new InvalidOperationException($"Ambiguous tool name '{name}'. Use 'Type.Method'.")
-            };
+            return null;
         }
 
         private static object?[] BuildArguments(MethodInfo method, IServiceProvider sp, Dictionary<string, JsonElement>? providedArgs, CancellationToken requestCt)
@@ -187,9 +174,12 @@ internal static partial class McpRestEndpointsExtensions
                         if (!mi.IsDefined(typeof(McpServerToolAttribute), inherit: false))
                             continue;
 
+                        var toolAttr = mi.GetCustomAttribute<McpServerToolAttribute>(inherit: false);
+                        if (toolAttr == null || string.IsNullOrWhiteSpace(toolAttr.Name))
+                            continue; // Skip if no Name specified
                         var desc = mi.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>()?.Description;
-                        var name = mi.Name;
-                        var fullName = $"{t.Name}.{mi.Name}";
+                        var name = toolAttr.Name; // Use attribute Name as canonical
+                        var fullName = $"{t.Name}.{name}";
 
                         var parameters = mi.GetParameters()
                             .Select(p => new ToolParameterDto(

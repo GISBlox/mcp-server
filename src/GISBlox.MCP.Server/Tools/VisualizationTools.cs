@@ -19,7 +19,7 @@ internal class VisualizationTools
 
    private static readonly JsonSerializerOptions CompactJsonOptions = new() { WriteIndented = false };
 
-   [McpServerTool]
+   [McpServerTool(Name = "visualize_pc4_get")]
    [Description("Generates a geojson.io URL to visualize the geometry of a given postal code (4 digits).")]
    public static async Task<string> VisualizePostalCode4(GISBloxClient gisbloxClient, string postalCodeId, CancellationToken cancellationToken = default)
    {
@@ -35,7 +35,7 @@ internal class VisualizationTools
       return CreateGeoJsonIoUrl(dataLakeUrl);
    }
 
-   [McpServerTool]
+   [McpServerTool(Name = "visualize_pc4_neighbours_list")]
    [Description("Generates a geojson.io URL to visualize the geometry of a given postal code (4 digits) and its neighbouring postal codes.")]
    public static async Task<string> VisualizePostalCode4Neighbours(GISBloxClient gisbloxClient, string postalCodeId, CancellationToken cancellationToken = default)
    {
@@ -62,7 +62,7 @@ internal class VisualizationTools
       return CreateGeoJsonIoUrl(dataLakeUrl);
    }
 
-   [McpServerTool]
+   [McpServerTool(Name = "visualize_pc6_get")]
    [Description("Generates a geojson.io URL to visualize the geometry of a given postal code (6 digits).")]
    public static async Task<string> VisualizePostalCode6(GISBloxClient gisbloxClient, string postalCodeId, CancellationToken cancellationToken = default)
    {
@@ -79,7 +79,7 @@ internal class VisualizationTools
       return CreateGeoJsonIoUrl(dataLakeUrl);
    }
 
-   [McpServerTool]
+   [McpServerTool(Name = "visualize_pc6_neighbours_list")]
    [Description("Generates a geojson.io URL to visualize the geometry of a given postal code (6 digits) and its neighbouring postal codes.")]
    public static async Task<string> VisualizePostalCode6Neighbours(GISBloxClient gisbloxClient, string postalCodeId, CancellationToken cancellationToken = default)
    {
@@ -106,7 +106,7 @@ internal class VisualizationTools
       return CreateGeoJsonIoUrl(dataLakeUrl);
    }
 
-   [McpServerTool]
+   [McpServerTool(Name = "zipchat_pc_query")]
    [Description("Generates a ZipChat Copilot URL to retrieve detailed information about a given postal code (4 or 6 digits) or its neighbours.")]
    public static string AskZipChatCopilot(string postalCodeId, bool showNeighbours = false)
    {

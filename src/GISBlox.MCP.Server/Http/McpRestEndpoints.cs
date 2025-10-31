@@ -141,8 +141,8 @@ internal static partial class McpRestEndpointsExtensions
 
                     var tools = descriptors.Select(d =>
                     {
-                        string baseName = duplicates.ContainsKey(d.Name) ? d.FullName : d.Name;
-                        string safe = SanitizeToolName(baseName);
+                        // Only use the Name from the McpServerTool attribute as the canonical identifier
+                        string safe = SanitizeToolName(d.Name);
                         if (!usedSafeNames.Add(safe))
                         {
                             int i = 2;
@@ -152,7 +152,7 @@ internal static partial class McpRestEndpointsExtensions
                                 var suffix = "_" + i.ToString();
                                 if (candidate.Length + suffix.Length > 64)
                                 {
-                                    candidate = candidate.Substring(0, Math.Max(1, 64 - suffix.Length));
+                                    candidate = candidate[..Math.Max(1, 64 - suffix.Length)];
                                 }
                                 candidate += suffix;
                                 if (usedSafeNames.Add(candidate))
@@ -164,9 +164,9 @@ internal static partial class McpRestEndpointsExtensions
                             }
                         }
 
-                        _toolNameMap[safe] = d.FullName;
-                        _toolNameMap[d.Name] = d.FullName;
-                        _toolNameMap[d.FullName] = d.FullName;
+                        // Only map the tool by its Name (from the attribute)
+                        _toolNameMap[safe] = d.Name;
+                        _toolNameMap[d.Name] = d.Name;
 
                         var props = new Dictionary<string, object>();
                         var required = new List<string>();
@@ -215,9 +215,14 @@ internal static partial class McpRestEndpointsExtensions
 
                     string toolName = nameProp.GetString()!;
 
-                    if (_toolNameMap.TryGetValue(toolName, out var fullName))
+                    // Only resolve by the Name from the attribute
+                    if (_toolNameMap.TryGetValue(toolName, out var canonicalName))
                     {
-                        toolName = fullName; // use canonical for underlying invocation
+                        toolName = canonicalName;
+                    }
+                    else
+                    {
+                        return JsonRpcError(id, -32601, "Tool not found", toolName);
                     }
 
                     Dictionary<string, JsonElement>? arguments = null;
