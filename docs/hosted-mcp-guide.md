@@ -195,10 +195,9 @@ curl --request POST \
   "result": {
     "tools": [
       {
-        "name": "ConvertToGeoJson",
+        "name": "conversion_wkt_to_geojson_get",
         "description": "Converts a WKT geometry string into a GeoJson Feature(Collection) string.",
-        "inputSchema": {
-          "type": "object",
+        "inputSchema": {          
           "properties": {
             "wkt": {
               "type": "string"
@@ -206,28 +205,18 @@ curl --request POST \
             "asFeatureCollection": {
               "type": "boolean"
             }
-          },
-          "additionalProperties": false,
-          "required": [
-            "wkt",
-            "asFeatureCollection"
-          ]
+          }          
         }
-      },      
+      },
       {
-        "name": "GetGemeente",
-        "description": "Returns the municipality (gemeente) details for a given municipality name.",
-        "inputSchema": {
-          "type": "object",
+        "name": "conversion_geojson_to_wkt_get",
+        "description": "Converts a GeoJson Feature(Collection) string into one or more WKT objects.",
+        "inputSchema": {          
           "properties": {
-            "name": {
+            "geoJson": {
               "type": "string"
             }
-          },
-          "additionalProperties": false,
-          "required": [
-            "name"
-          ]
+          }          
         }
       }
     ]
@@ -247,7 +236,7 @@ curl --request POST \
   --data '{
     "method": "tool/invoke",
     "params": {
-        "name": "GetWijkenByGemeenteId",
+        "name": "postalcodes_gwb_wijken_in_gemeente_id_list",
         "arguments": {
         "gemeenteId": 308
         }
@@ -257,7 +246,7 @@ curl --request POST \
  }'
 ```
 
-**Example Response (showing only first two results)**
+**Example Response**
 
 ```json
 {
@@ -266,24 +255,8 @@ curl --request POST \
   "result": {
     "content": [
       {
-        "type": "json",
-        "data": {
-          "MetaData": {
-            "GWBType": "Wijken",
-            "ParentID": 308,
-            "TotalRecords": 5
-          },
-          "RecordSet": [
-            {
-              "ID": 30800,
-              "Naam": "Wijk 00 Baarn"
-            },
-            {
-              "ID": 30801,
-              "Naam": "Wijk 01 Baarn-Noord, Eemdal en Eemland"
-            }           
-          ]
-        }
+        "type": "text",
+        "text": "{\"MetaData\":{\"GWBType\":\"Wijken\",\"ParentID\":308,\"TotalRecords\":5},\"RecordSet\":[{\"ID\":30800,\"Naam\":\"Wijk 00 Baarn\"},{\"ID\":30801,\"Naam\":\"Wijk 01 Baarn-Noord, Eemdal en Eemland\"},{\"ID\":30802,\"Naam\":\"Wijk 02 P.H.W.park\"},{\"ID\":30804,\"Naam\":\"Wijk 04 Buitengebied\"},{\"ID\":30805,\"Naam\":\"Wijk 05 Lage Vuursche\"}]}"
       }
     ],
     "isError": false
