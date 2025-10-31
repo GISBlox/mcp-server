@@ -13,204 +13,236 @@ using System.Text.Json.Nodes;
 [Description("Tools to visualize geometries using geojson.io.")]
 internal class VisualizationTools
 {
-    private const string GeoJsonIoUrlPrefix = "https://geojson.io/#data=data:text/x-url,";
-    private const string GISBloxServicesBaseUrl = "https://services.gisblox.com/v1";
-    private const string ZipChatCopilotUrlPrefix = "https://zipchat.gisblox.com/?pc=";    
+   private const string GeoJsonIoUrlPrefix = "https://geojson.io/#data=data:text/x-url,";
+   private const string GISBloxServicesBaseUrl = "https://services.gisblox.com/v1";
+   private const string ZipChatCopilotUrlPrefix = "https://zipchat.gisblox.com/?pc=";
 
-    private static readonly JsonSerializerOptions CompactJsonOptions = new() { WriteIndented = false };
+   private static readonly JsonSerializerOptions CompactJsonOptions = new() { WriteIndented = false };
 
-    [McpServerTool]
-    [Description("Generates a geojson.io URL to visualize the geometry of a given postal code (4 digits).")]
-    public static async Task<string> VisualizePostalCode4(GISBloxClient gisbloxClient, string postalCodeId, CancellationToken cancellationToken = default)
-    {
-        ValidatePostalCodeId(postalCodeId);
-        PostalCode4Record record = await gisbloxClient.PostalCodes.GetPostalCodeRecord<PostalCode4Record>(postalCodeId, CoordinateSystem.WGS84, cancellationToken);
+   [McpServerTool(Name = "visualize_pc4_get")]
+   [Description("Generates a geojson.io URL to visualize the geometry of a given postal code (4 digits).")]
+   public static async Task<string> VisualizePostalCode4(GISBloxClient gisbloxClient, string postalCodeId, CancellationToken cancellationToken = default)
+   {
+      ValidatePostalCodeId(postalCodeId);
+      PostalCode4Record record = await gisbloxClient.PostalCodes.GetPostalCodeRecord<PostalCode4Record>(postalCodeId, CoordinateSystem.WGS84, cancellationToken);
 
-        var pc = GetFirstPostalCodeOrThrow(record.PostalCode, postalCodeId, "4");
-        string feature = await WktToFeature(gisbloxClient, pc.Id, pc.Location.Geometry.WKT, cancellationToken);
+      var pc4 = GetFirstPostalCodeOrThrow(record.PostalCode, postalCodeId, "4");
+      string feature = await WktToFeature(gisbloxClient, pc4, cancellationToken);
 
-        string geojson = CreateFeatureCollection([feature]);                
-        string dataLakeUrl = await UploadToDataLakeAndCreatePublicUrl(gisbloxClient, geojson, $"PC4_{postalCodeId}", cancellationToken);
+      string geojson = CreateFeatureCollection([feature]);
+      string dataLakeUrl = await UploadToDataLakeAndCreatePublicUrl(gisbloxClient, geojson, $"PC4_{postalCodeId}", cancellationToken);
 
-        return CreateGeoJsonIoUrl(dataLakeUrl);
-    }
+      return CreateGeoJsonIoUrl(dataLakeUrl);
+   }
 
-    [McpServerTool]
-    [Description("Generates a geojson.io URL to visualize the geometry of a given postal code (4 digits) and its neighbouring postal codes.")]
-    public static async Task<string> VisualizePostalCode4Neighbours(GISBloxClient gisbloxClient, string postalCodeId, CancellationToken cancellationToken = default)
-    {
-        ValidatePostalCodeId(postalCodeId);
-        PostalCode4Record record = await gisbloxClient.PostalCodes.GetPostalCodeNeighbours<PostalCode4Record>(postalCodeId, false, CoordinateSystem.WGS84, cancellationToken);
+   [McpServerTool(Name = "visualize_pc4_neighbours_list")]
+   [Description("Generates a geojson.io URL to visualize the geometry of a given postal code (4 digits) and its neighbouring postal codes.")]
+   public static async Task<string> VisualizePostalCode4Neighbours(GISBloxClient gisbloxClient, string postalCodeId, CancellationToken cancellationToken = default)
+   {
+      ValidatePostalCodeId(postalCodeId);
+      PostalCode4Record record = await gisbloxClient.PostalCodes.GetPostalCodeNeighbours<PostalCode4Record>(postalCodeId, false, CoordinateSystem.WGS84, cancellationToken);
 
-        if (record.PostalCode is null || record.PostalCode.Count == 0)
-            throw new InvalidOperationException($"No neighbouring postal codes returned for '{postalCodeId}'.");
+      if (record.PostalCode is null || record.PostalCode.Count == 0)
+         throw new InvalidOperationException($"No neighbouring postal codes returned for '{postalCodeId}'.");
 
-        List<string> features = new(record.PostalCode.Count);
+      List<string> features = new(record.PostalCode.Count);
 
-        foreach (PostalCode4 pc in record.PostalCode)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            string feature = await WktToFeature(gisbloxClient, pc.Id, pc.Location.Geometry.WKT, cancellationToken);
-            features.Add(feature);
+      foreach (PostalCode4 pc4 in record.PostalCode)
+      {
+         cancellationToken.ThrowIfCancellationRequested();
+         string feature = await WktToFeature(gisbloxClient, pc4, cancellationToken);
+         features.Add(feature);
 
-            await Task.Delay(495, cancellationToken); // To avoid exceeding API call quota
-        }
+         await Task.Delay(495, cancellationToken); // To avoid exceeding API call quota
+      }
 
-        string geojson = CreateFeatureCollection(features);
-        string dataLakeUrl = await UploadToDataLakeAndCreatePublicUrl(gisbloxClient, geojson, $"PC4N_{postalCodeId}", cancellationToken);
+      string geojson = CreateFeatureCollection(features);
+      string dataLakeUrl = await UploadToDataLakeAndCreatePublicUrl(gisbloxClient, geojson, $"PC4N_{postalCodeId}", cancellationToken);
 
-        return CreateGeoJsonIoUrl(dataLakeUrl);
-    }
+      return CreateGeoJsonIoUrl(dataLakeUrl);
+   }
 
-    [McpServerTool]
-    [Description("Generates a geojson.io URL to visualize the geometry of a given postal code (6 digits).")]
-    public static async Task<string> VisualizePostalCode6(GISBloxClient gisbloxClient, string postalCodeId, CancellationToken cancellationToken = default)
-    {
-        ValidatePostalCodeId(postalCodeId);
-        PostalCode6Record record = await gisbloxClient.PostalCodes.GetPostalCodeRecord<PostalCode6Record>(postalCodeId, CoordinateSystem.WGS84, cancellationToken);
+   [McpServerTool(Name = "visualize_pc6_get")]
+   [Description("Generates a geojson.io URL to visualize the geometry of a given postal code (6 digits).")]
+   public static async Task<string> VisualizePostalCode6(GISBloxClient gisbloxClient, string postalCodeId, CancellationToken cancellationToken = default)
+   {
+      ValidatePostalCodeId(postalCodeId);
+      PostalCode6Record record = await gisbloxClient.PostalCodes.GetPostalCodeRecord<PostalCode6Record>(postalCodeId, CoordinateSystem.WGS84, cancellationToken);
 
-        var pc = GetFirstPostalCodeOrThrow(record.PostalCode, postalCodeId, "6");
+      var pc6 = GetFirstPostalCodeOrThrow(record.PostalCode, postalCodeId, "6");
 
-        string feature = await WktToFeature(gisbloxClient, pc.Id, pc.Location.Geometry.WKT, cancellationToken);
+      string feature = await WktToFeature(gisbloxClient, pc6, cancellationToken);
 
-        string geojson = CreateFeatureCollection([feature]);
-        string dataLakeUrl = await UploadToDataLakeAndCreatePublicUrl(gisbloxClient, geojson, $"PC6_{postalCodeId}", cancellationToken);
+      string geojson = CreateFeatureCollection([feature]);
+      string dataLakeUrl = await UploadToDataLakeAndCreatePublicUrl(gisbloxClient, geojson, $"PC6_{postalCodeId}", cancellationToken);
 
-        return CreateGeoJsonIoUrl(dataLakeUrl);
-    }
+      return CreateGeoJsonIoUrl(dataLakeUrl);
+   }
 
-    [McpServerTool]
-    [Description("Generates a geojson.io URL to visualize the geometry of a given postal code (6 digits) and its neighbouring postal codes.")]
-    public static async Task<string> VisualizePostalCode6Neighbours(GISBloxClient gisbloxClient, string postalCodeId, CancellationToken cancellationToken = default)
-    {
-        ValidatePostalCodeId(postalCodeId);
-        PostalCode6Record record = await gisbloxClient.PostalCodes.GetPostalCodeNeighbours<PostalCode6Record>(postalCodeId, false, CoordinateSystem.WGS84, cancellationToken);
+   [McpServerTool(Name = "visualize_pc6_neighbours_list")]
+   [Description("Generates a geojson.io URL to visualize the geometry of a given postal code (6 digits) and its neighbouring postal codes.")]
+   public static async Task<string> VisualizePostalCode6Neighbours(GISBloxClient gisbloxClient, string postalCodeId, CancellationToken cancellationToken = default)
+   {
+      ValidatePostalCodeId(postalCodeId);
+      PostalCode6Record record = await gisbloxClient.PostalCodes.GetPostalCodeNeighbours<PostalCode6Record>(postalCodeId, false, CoordinateSystem.WGS84, cancellationToken);
 
-        if (record.PostalCode is null || record.PostalCode.Count == 0)
-            throw new InvalidOperationException($"No neighbouring postal codes returned for '{postalCodeId}'.");
+      if (record.PostalCode is null || record.PostalCode.Count == 0)
+         throw new InvalidOperationException($"No neighbouring postal codes returned for '{postalCodeId}'.");
 
-        List<string> features = new(record.PostalCode.Count);
+      List<string> features = new(record.PostalCode.Count);
 
-        foreach (PostalCode6 pc in record.PostalCode)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            string feature = await WktToFeature(gisbloxClient, pc.Id, pc.Location.Geometry.WKT, cancellationToken);
-            features.Add(feature);
+      foreach (PostalCode6 pc6 in record.PostalCode)
+      {
+         cancellationToken.ThrowIfCancellationRequested();
+         string feature = await WktToFeature(gisbloxClient, pc6, cancellationToken);
+         features.Add(feature);
 
-            await Task.Delay(495, cancellationToken); // To avoid exceeding API call quota
-        }
+         await Task.Delay(495, cancellationToken); // To avoid exceeding API call quota
+      }
 
-        string geojson = CreateFeatureCollection(features);
-        string dataLakeUrl = await UploadToDataLakeAndCreatePublicUrl(gisbloxClient, geojson, $"PC6N_{postalCodeId}", cancellationToken);
+      string geojson = CreateFeatureCollection(features);
+      string dataLakeUrl = await UploadToDataLakeAndCreatePublicUrl(gisbloxClient, geojson, $"PC6N_{postalCodeId}", cancellationToken);
 
-        return CreateGeoJsonIoUrl(dataLakeUrl);
-    }
+      return CreateGeoJsonIoUrl(dataLakeUrl);
+   }
 
-    [McpServerTool]
-    [Description("Generates a ZipChat Copilot URL to retrieve detailed information about a given postal code (4 or 6 digits) or its neighbours.")]
-    public static string AskZipChatCopilot(string postalCodeId, bool showNeighbours = false)
-    {
-        return $"{ZipChatCopilotUrlPrefix}{postalCodeId}&c=1&n={(showNeighbours ? "1" : "0")}";
-    }
+   [McpServerTool(Name = "zipchat_pc_query")]
+   [Description("Generates a ZipChat Copilot URL to retrieve detailed information about a given postal code (4 or 6 digits) or its neighbours.")]
+   public static string AskZipChatCopilot(string postalCodeId, bool showNeighbours = false)
+   {
+      return $"{ZipChatCopilotUrlPrefix}{postalCodeId}&c=1&n={(showNeighbours ? "1" : "0")}";
+   }
 
-    #region Internal Helpers
+   #region Internal Helpers
 
-    private static void ValidatePostalCodeId(string postalCodeId)
-    {
-        if (string.IsNullOrWhiteSpace(postalCodeId))
-            throw new ArgumentException("Postal code id must be provided.", nameof(postalCodeId));
-    }
+   private static void ValidatePostalCodeId(string postalCodeId)
+   {
+      if (string.IsNullOrWhiteSpace(postalCodeId))
+         throw new ArgumentException("Postal code id must be provided.", nameof(postalCodeId));
+   }
 
-    private static TPostalCode GetFirstPostalCodeOrThrow<TPostalCode>(IList<TPostalCode>? list, string requestedId, string kind)
-    {
-        if (list is null || list.Count == 0)
-            throw new InvalidOperationException($"No {kind}-digit postal code geometry found for '{requestedId}'.");
-        return list[0];
-    }
+   private static TPostalCode GetFirstPostalCodeOrThrow<TPostalCode>(IList<TPostalCode>? list, string requestedId, string kind)
+   {
+      if (list is null || list.Count == 0)
+         throw new InvalidOperationException($"No {kind}-digit postal code geometry found for '{requestedId}'.");
+      return list[0];
+   }   
 
-    private static async Task<string> WktToFeature(GISBloxClient gisbloxClient, string postalCodeId, string wkt, CancellationToken cancellationToken = default)
-    {
-        string feature = await ConversionTools.ConvertToGeoJson(gisbloxClient, wkt, false, cancellationToken);
-        return AddPostalCodeProperty(feature, postalCodeId);
-    }
+   private static async Task<string> WktToFeature(GISBloxClient gisbloxClient, PostalCode4 pc4, CancellationToken cancellationToken = default)
+   {
+      string feature = await ConversionTools.ConvertToGeoJson(gisbloxClient, pc4.Location.Geometry.WKT, false, cancellationToken);
+      return AddFeatureProperties(feature, new Dictionary<string, string>
+      {
+         { "postcode", pc4.Id },
+         { "wijk(en)", pc4.Location.Wijken },
+         { "gemeente", pc4.Location.Gemeente },
+         { "omtrek", FormatDouble(pc4.Location.Geometry.PerimeterM) + " meter" },
+         { "oppervlakte", FormatDouble(pc4.Location.Geometry.AreaM2) + " m2" }
+      });
+   }
 
-    private static string AddPostalCodeProperty(string geoJson, string postalCodeId)
-    {
-        try
-        {
-            JsonNode? root = JsonNode.Parse(geoJson);
-            if (root is JsonObject obj)
+   private static async Task<string> WktToFeature(GISBloxClient gisbloxClient, PostalCode6 pc6, CancellationToken cancellationToken = default)
+   {
+      string feature = await ConversionTools.ConvertToGeoJson(gisbloxClient, pc6.Location.Geometry.WKT, false, cancellationToken);
+      return AddFeatureProperties(feature, new Dictionary<string, string>
+      {
+         { "postcode", pc6.Id },
+         { "buurt", pc6.Location.Buurt },
+         { "wijk", pc6.Location.Wijk },
+         { "gemeente", pc6.Location.Gemeente },
+         { "omtrek", FormatDouble(pc6.Location.Geometry.PerimeterM) + " meter" },
+         { "oppervlakte", FormatDouble(pc6.Location.Geometry.AreaM2) + " m2" }
+      });
+   }
+
+   private static string AddFeatureProperties(string geoJson, Dictionary<string, string> featureProperties)
+   {
+      try
+      {
+         JsonNode? root = JsonNode.Parse(geoJson);
+         if (root is JsonObject obj)
+         {           
+            JsonObject props;
+            if (obj["properties"] is JsonObject existing)
             {
-                JsonObject props;
-                if (obj["properties"] is JsonObject existing)
-                {
-                    props = existing;
-                }
-                else
-                {
-                    props = new JsonObject();
-                    obj["properties"] = props;
-                }
-
-                props["postcode"] = postalCodeId;
-                return root.ToJsonString(CompactJsonOptions);
+               props = existing;
             }
-        }
-        catch (JsonException ex)
-        {            
-            System.Diagnostics.Debug.WriteLine($"Failed to parse or modify GeoJSON: {ex.Message}");            
-        }
-        return geoJson;
-    }
-    
-    private static async Task<string> UploadToDataLakeAndCreatePublicUrl(GISBloxClient gisbloxClient, string geojson, string fileIdentifier, CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        
-        string filename = await UploadToDataLake(gisbloxClient, geojson, fileIdentifier, cancellationToken);
-        if (string.IsNullOrWhiteSpace(filename))
-            throw new IOException("Upload to Data Lake did not return a valid filename.");
+            else
+            {
+               props = new JsonObject();
+               obj["properties"] = props;
+            }
 
-        cancellationToken.ThrowIfCancellationRequested();
-        
-        var customerFolder = await GetCustomerDataLakeFolder(gisbloxClient, cancellationToken);
-        if (string.IsNullOrWhiteSpace(customerFolder))
-            throw new IOException("Could not retrieve customer folder ID from Data Lake.");
+            foreach (var item in featureProperties)
+            {
+               props[item.Key] = item.Value;
+            }
 
-        return $"{GISBloxServicesBaseUrl}/datalake/load/{filename}?folderId={customerFolder}";
-    }
+            return root.ToJsonString(CompactJsonOptions);
+         }
+      }
+      catch (JsonException ex)
+      {
+         System.Diagnostics.Debug.WriteLine($"Failed to parse or modify GeoJSON: {ex.Message}");
+      }
+      return geoJson;
+   }
 
-    private static async Task<string> UploadToDataLake(GISBloxClient gisbloxClient, string geojson, string fileIdentifier, CancellationToken cancellationToken)
-    {     
-        cancellationToken.ThrowIfCancellationRequested();
-        
-        string filename = $"viz_{fileIdentifier}_{DateTime.UtcNow:yyyy-MM-ddTHH-mm-ss}.json";
+   private static async Task<string> UploadToDataLakeAndCreatePublicUrl(GISBloxClient gisbloxClient, string geojson, string fileIdentifier, CancellationToken cancellationToken)
+   {
+      cancellationToken.ThrowIfCancellationRequested();
 
-        if (!await gisbloxClient.DataLake.UploadFileData(geojson, filename, cancellationToken))
-            throw new IOException($"Failed to upload '{filename}' to Data Lake.");
+      string filename = await UploadToDataLake(gisbloxClient, geojson, fileIdentifier, cancellationToken);
+      if (string.IsNullOrWhiteSpace(filename))
+         throw new IOException("Upload to Data Lake did not return a valid filename.");
 
-        return filename;
-    }
+      cancellationToken.ThrowIfCancellationRequested();
 
-    private static async Task<string> GetCustomerDataLakeFolder(GISBloxClient gisbloxClient, CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        
-        var customerFolder = await gisbloxClient.DataLake.GetCustomerFolder(cancellationToken);
-        return customerFolder.FolderId;
-    }
+      var customerFolder = await GetCustomerDataLakeFolder(gisbloxClient, cancellationToken);
+      if (string.IsNullOrWhiteSpace(customerFolder))
+         throw new IOException("Could not retrieve customer folder ID from Data Lake.");
 
-    private static string CreateGeoJsonIoUrl(string geojsonDataUrl)
-    {
-        return GeoJsonIoUrlPrefix + EncodeUriComponent(geojsonDataUrl);
-    }
+      return $"{GISBloxServicesBaseUrl}/datalake/load/{filename}?folderId={customerFolder}";
+   }
 
-    private static string CreateFeatureCollection(IReadOnlyList<string> features)
-    {
-        return "{ \"type\": \"FeatureCollection\", \"features\": [" + string.Join(",", features) + "] }";
-    }
+   private static async Task<string> UploadToDataLake(GISBloxClient gisbloxClient, string geojson, string fileIdentifier, CancellationToken cancellationToken)
+   {
+      cancellationToken.ThrowIfCancellationRequested();
 
-    private static string EncodeUriComponent(string value) => Uri.EscapeDataString(value);
+      string filename = $"viz_{fileIdentifier}_{DateTime.UtcNow:yyyy-MM-ddTHH-mm-ss}.geojson";
 
-    #endregion
+      if (!await gisbloxClient.DataLake.UploadFileData(geojson, filename, cancellationToken))
+         throw new IOException($"Failed to upload '{filename}' to Data Lake.");
+
+      return filename;
+   }
+
+   private static async Task<string> GetCustomerDataLakeFolder(GISBloxClient gisbloxClient, CancellationToken cancellationToken)
+   {
+      cancellationToken.ThrowIfCancellationRequested();
+
+      var customerFolder = await gisbloxClient.DataLake.GetCustomerFolder(cancellationToken);
+      return customerFolder.FolderId;
+   }
+
+   private static string CreateGeoJsonIoUrl(string geojsonDataUrl)
+   {
+      return GeoJsonIoUrlPrefix + EncodeUriComponent(geojsonDataUrl);
+   }
+
+   private static string CreateFeatureCollection(IReadOnlyList<string> features)
+   {
+      return "{ \"type\": \"FeatureCollection\", \"features\": [" + string.Join(",", features) + "] }";
+   }
+
+   private static string EncodeUriComponent(string value) => Uri.EscapeDataString(value);
+      
+   private static string FormatDouble(double value)
+   {      
+      return Math.Round(value)
+         .ToString("#,0", System.Globalization.CultureInfo.InvariantCulture)
+         .Replace(",", ".");
+   }
+
+   #endregion
 }
