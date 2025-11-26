@@ -2,7 +2,7 @@
 
 This guide explains how to configure Visual Studio for debugging the GISBlox MCP Server.
 
-Refer to the [Hosted MCP Server setup guide](hosted-mcp-setup.md) if you do not want to debug locally.
+Refer to the [Hosted MCP Server setup guide](hosted-mcp-guide.md) if you do not want to debug locally.
 
 ## Requirements
 
