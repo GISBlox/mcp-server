@@ -12,43 +12,43 @@ using System.Threading.Tasks;
 
 namespace GISBlox.MCP.Server.Tests
 {
-    [TestClass]
-    public class InfoToolsTests
-    {
-        private GISBloxClient _client = null!;
+   [TestClass]
+   public class InfoToolsTests
+   {
+      private GISBloxClient _client = null!;
 
-        #region Initialization and cleanup
+      #region Initialization and cleanup
 
-        [TestInitialize]
-        public void Init()
-        {
-            var serviceKey = Environment.GetEnvironmentVariable("GISBLOX_SERVICE_KEY");            
-            var serviceUrl = Environment.GetEnvironmentVariable("GISBLOX_SERVICE_URL") ?? "https://services.gisblox.com";
+      [TestInitialize]
+      public void Init()
+      {
+         var serviceKey = Environment.GetEnvironmentVariable("GISBLOX_SERVICE_KEY");
+         var serviceUrl = Environment.GetEnvironmentVariable("GISBLOX_SERVICE_URL") ?? "https://services.gisblox.com";
 
-            _client = GISBloxClient.CreateClient(serviceUrl, serviceKey);
-        }
+         _client = GISBloxClient.CreateClient(serviceUrl, serviceKey, applicationName: "GISBlox.MCP.Server.Tests");
+      }
 
-        [TestCleanup]
-        public void Cleanup()
-        {
-            if (_client is IDisposable d)
-            {
-                d.Dispose();
-            }
-        }
+      [TestCleanup]
+      public void Cleanup()
+      {
+         if (_client is IDisposable d)
+         {
+            d.Dispose();
+         }
+      }
 
-        #endregion
+      #endregion
 
-        [TestMethod]
-        public async Task GetSubscriptionInfo()
-        {
-            List<Subscription> subscriptions = await InfoTools.GetSubscriptions(_client, CancellationToken.None);
+      [TestMethod]
+      public async Task GetSubscriptionInfo()
+      {
+         List<Subscription> subscriptions = await InfoTools.GetSubscriptions(_client, CancellationToken.None);
 
-            subscriptions.ForEach(sub =>
-                Console.WriteLine($"\r\nName: {sub.Name} \r\nDescription: {sub.Description} \r\nRegistration date: {sub.RegisterDate} Expiration date: {sub.ExpirationDate} Expired: {sub.Expired}"));
+         subscriptions.ForEach(sub =>
+             Console.WriteLine($"\r\nName: {sub.Name} \r\nDescription: {sub.Description} \r\nRegistration date: {sub.RegisterDate} Expiration date: {sub.ExpirationDate} Expired: {sub.Expired}"));
 
-            Assert.IsNotNull(subscriptions, "Response is null.");
-            Assert.AreNotEqual(0, subscriptions.Count, "No subscriptions returned.");
-        }
-    }
+         Assert.IsNotNull(subscriptions, "Response is null.");
+         Assert.AreNotEqual(0, subscriptions.Count, "No subscriptions returned.");
+      }
+   }
 }

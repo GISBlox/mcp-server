@@ -62,8 +62,8 @@ if (stdioEnabled)
     mcp.WithStdioServerTransport();
 
     builder.Services.AddScoped<GISBloxClient>(sp =>
-    {        
-        return GISBloxClient.CreateClient(serviceUrl, baseServiceKey);
+    {
+        return GISBloxClient.CreateClient(serviceUrl, baseServiceKey, applicationName: "GISBlox.MCP.Server");
     });
 }
 
@@ -80,7 +80,7 @@ if (httpEnabled)
         if (string.Equals(ctx.Request.Path, "/health", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(ctx.Request.Path, "/", StringComparison.OrdinalIgnoreCase))
         {
-            return GISBloxClient.CreateClient(serviceUrl, string.Empty);
+            return GISBloxClient.CreateClient(serviceUrl, string.Empty, applicationName: "GISBlox.MCP.Server");
         }
     
         if (!ctx.Request.Headers.TryGetValue("Authorization", out var authValues))
@@ -94,8 +94,8 @@ if (httpEnabled)
         var key = auth[bearerPrefix.Length..].Trim();
         if (string.IsNullOrWhiteSpace(key))
             throw new UnauthorizedAccessException("Empty GISBlox service key.");
-                
-        return GISBloxClient.CreateClient(serviceUrl, key);
+
+        return GISBloxClient.CreateClient(serviceUrl, key, applicationName: "GISBlox.MCP.Server");
     });
 
     builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));

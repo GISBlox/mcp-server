@@ -32,10 +32,10 @@ To generate a service key:
 
 ## 📖 Integration guides
 
-For detailed setup instructions, refer to the following guides:
+Refer to the following guides for setting up the MCP server in your preferred environment:
 
-- [Visual Studio Setup](docs/vstudio-setup.md) - Step-by-step guide to set up the MCP server in Visual Studio.
-- Refer to the [Hosted MCP Server setup guide](docs/hosted-mcp-guide.md) if you do not want to install anything locally: 
+- [Debug in Visual Studio](docs/vstudio-setup.md) - Step-by-step guide to set up the MCP server for debugging in Visual Studio.
+- Refer to the [Hosted MCP Server setup guide](docs/hosted-mcp-guide.md) if you plan on using the hosted MCP server.
 
     - [VS Code](docs/hosted-mcp-guide.md#21-vs-code) - Instructions for integrating with Visual Studio Code
     - [Visual Studio](docs/hosted-mcp-guide.md#22-visual-studio) - Step-by-step guide to use the MCP server in Visual Studio

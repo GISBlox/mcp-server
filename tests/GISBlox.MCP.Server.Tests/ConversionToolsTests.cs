@@ -27,9 +27,9 @@ namespace GISBlox.MCP.Server.Tests
       public void Init()
       {
          var serviceKey = Environment.GetEnvironmentVariable("GISBLOX_SERVICE_KEY");
-         var serviceUrl = Environment.GetEnvironmentVariable("GISBLOX_SERVICE_URL") ?? "https://services.gisblox.com";         
+         var serviceUrl = Environment.GetEnvironmentVariable("GISBLOX_SERVICE_URL") ?? "https://services.gisblox.com";
 
-         _client = GISBloxClient.CreateClient(serviceUrl, serviceKey);
+         _client = GISBloxClient.CreateClient(serviceUrl, serviceKey, applicationName: "GISBlox.MCP.Server.Tests");
       }
 
       [TestCleanup]
