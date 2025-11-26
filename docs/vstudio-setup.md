@@ -1,21 +1,19 @@
-# Visual Studio Setup
+# Debugging in Visual Studio
 
-This guide explains how to configure Visual Studio for use with the GISBlox MCP Server.
+This guide explains how to configure Visual Studio for debugging the GISBlox MCP Server.
 
-Refer to the [Hosted MCP Server setup guide](hosted-mcp-setup.md) if you do not want to install or configure anything locally.
+Refer to the [Hosted MCP Server setup guide](hosted-mcp-setup.md) if you do not want to debug locally.
 
 ## Requirements
 
 - Visual Studio 2022 (17.14.9 or later) installed and configured with Copilot
 - GISBlox MCP Server built locally
 
-## Setup Instructions
+## Debug Instructions
 
 1. Go to the `.mcp.json` file in the `Solution Items` folder.
 
-2. Either add your service key to the `GISBLOX_SERVICE_KEY` property in the `env` section of the file, or add it as a system environment variable. 
-   
-   Refer to the [README](../README.md#%EF%B8%8F-usage) for more information on obtaining a service key.
+2. Double-check the file looks similar to the one below:
 
    ```json
     {
@@ -28,32 +26,35 @@ Refer to the [Hosted MCP Server setup guide](hosted-mcp-setup.md) if you do not 
             "run",
             "--project",
             "src/GISBlox.MCP.Server/GISBlox.MCP.Server.csproj"
-          ],
-          "env": {
-            "GISBLOX_SERVICE_KEY": "<YOUR_KEY>"
-          }
+          ]
         }
       }
     }
     ```
 
-   Restart Visual Studio after modifying the `.mcp.json` file. 
+   **Restart Visual Studio** if you had to make changes to the `.mcp.json` file. 
 
-3. Build the Solution.
-4. In Visual Studio, click the `Ask` dropdown in the GitHub Copilot Chat window, and then select `Agent`.
+3. Build the Solution. Make sure there are no build errors.
+4. Set a breakpoint in the code where you want to start debugging.
+5. Start the debugger with the `GISBlox.MCP.Server` debug configuration selected.
+6. Create a tool request from your preferred HTTP client (`curl`, `Node.js fetch`, `Python requests`, `Bruno`, `Postman`, etc.) to trigger the breakpoint:
 
-   ![Select Agent](images/vstudio-setup-1.png)
-
-5. Select the tools you'd like to use.
-
-   ![Select Tools](images/vstudio-setup-2.png)
-
-6. Try a sample prompt: `List the Dutch gemeenten and sort them alphabetically`.
-
-   Copilot asks for permission to use a tool made available to it by the MCP server, select **Allow** with the scope you wish to proceed with.
-
-   ![Sample Prompt](images/vstudio-setup-3.png)
-
-7. After confirmation, Copilot will use the MCP server to answer your question.
-
-    ![Allow Tool](images/vstudio-setup-4.png)
+   ```bash
+   curl --request POST \
+     --url https://localhost:5001/mcp \
+     --header 'authorization: Bearer <YOUR_KEY>' \
+     --header 'content-type: application/json' \
+     --data '{
+       "method": "tool/invoke",
+       "params": {
+           "name": "postalcodes_gwb_wijken_in_gemeente_name_list",
+           "arguments": {
+           "gemeente": "Groningen"
+           }
+       },
+       "jsonrpc": "2.0",
+       "id": 1
+    }'
+   ```
+7. Replace `<YOUR_KEY>` with your actual API key. Refer to the [README](../README.md#%EF%B8%8F-usage) for more information on obtaining a service key.
+8. Run the request. Visual Studio should hit the breakpoint, allowing you to inspect variables, step through code, and analyze the execution flow.

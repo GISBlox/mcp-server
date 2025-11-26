@@ -12,57 +12,60 @@ namespace GISBlox.MCP.Server.Middleware;
 /// </summary>
 internal class McpNegotiationMiddleware(RequestDelegate next, string path)
 {
-    private readonly RequestDelegate _next = next;
-    private readonly PathString _path = new(path);
+   private readonly RequestDelegate _next = next;
+   private readonly PathString _path = new(path);
 
-    public async Task InvokeAsync(HttpContext context)
-    {
-        if (!HttpMethods.IsPost(context.Request.Method) || !context.Request.Path.Equals(_path))
-        {
-            await _next(context);
-            return;
-        }
+   private static readonly JsonSerializerOptions CachedJsonSerializerOptions = new()
+   {
+      PropertyNamingPolicy = null
+   };
 
-        // If content-type explicitly application/json OR accept prefers JSON-RPC result and body looks like JSON -> JSON-RPC
-        var contentType = context.Request.ContentType ?? string.Empty;
-        var accept = context.Request.Headers.Accept.ToString();
+   public async Task InvokeAsync(HttpContext context)
+   {
+      if (!HttpMethods.IsPost(context.Request.Method) || !context.Request.Path.Equals(_path))
+      {
+         await _next(context);
+         return;
+      }
 
-        if (contentType.Contains("application/json", StringComparison.OrdinalIgnoreCase) ||
-            accept.Contains("application/json", StringComparison.OrdinalIgnoreCase))
-        {
-            // Peek body minimally
-            context.Request.EnableBuffering();
-            using var reader = new StreamReader(context.Request.Body, Encoding.UTF8, leaveOpen: true);
-            char[] preview = new char[1];
-            int read = await reader.ReadAsync(preview, 0, 1);
-            context.Request.Body.Position = 0;
+      // If content-type explicitly application/json OR accept prefers JSON-RPC result and body looks like JSON -> JSON-RPC
+      var contentType = context.Request.ContentType ?? string.Empty;
+      var accept = context.Request.Headers.Accept.ToString();
 
-            if (read == 1 && (preview[0] == '{' || preview[0] == '['))
+      if (contentType.Contains("application/json", StringComparison.OrdinalIgnoreCase) ||
+          accept.Contains("application/json", StringComparison.OrdinalIgnoreCase))
+      {
+         // Peek body minimally
+         context.Request.EnableBuffering();
+         using var reader = new StreamReader(context.Request.Body, Encoding.UTF8, leaveOpen: true);
+         char[] preview = new char[1];
+         int read = await reader.ReadAsync(preview, 0, 1);
+         context.Request.Body.Position = 0;
+
+         if (read == 1 && (preview[0] == '{' || preview[0] == '['))
+         {
+            // Handle JSON-RPC directly and short-circuit
+            var jsonRpcResult = await McpRestEndpointsExtensions.JsonRpcEntryAsync(context);
+            
+            // Response already written if result is IActionResult; if it's a serializable object write JSON.
+            if (jsonRpcResult is not IResult r)
             {
-                // Handle JSON-RPC directly and short-circuit
-                var jsonRpcResult = await McpRestEndpointsExtensions.JsonRpcEntryAsync(context);
-                // Response already written if result is IActionResult; if it's a serializable object write JSON.
-                if (jsonRpcResult is not IResult r)
-                {
-                    context.Response.ContentType = "application/json";
-                    await JsonSerializer.SerializeAsync(context.Response.Body, jsonRpcResult, new JsonSerializerOptions
-                    {
-                        PropertyNamingPolicy = null
-                    }, context.RequestAborted);
-                }
-                return;
+               context.Response.ContentType = "application/json";
+               await JsonSerializer.SerializeAsync(context.Response.Body, jsonRpcResult, CachedJsonSerializerOptions, context.RequestAborted);
             }
-        }
+            return;
+         }
+      }
 
-        // Fallback to streaming transport
-        await _next(context);
-    }
+      // Fallback to streaming transport
+      await _next(context);
+   }
 }
 
 internal static class McpNegotiationMiddlewareExtensions
 {
-    public static IApplicationBuilder UseMcpJsonRpcNegotiation(this IApplicationBuilder app, string path = "/mcp")
-    {
-        return app.UseMiddleware<McpNegotiationMiddleware>(path);
-    }
+   public static IApplicationBuilder UseMcpJsonRpcNegotiation(this IApplicationBuilder app, string path = "/mcp")
+   {
+      return app.UseMiddleware<McpNegotiationMiddleware>(path);
+   }
 }
