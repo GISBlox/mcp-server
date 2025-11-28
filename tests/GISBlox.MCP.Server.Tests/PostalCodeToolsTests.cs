@@ -54,6 +54,7 @@ namespace GISBlox.MCP.Server.Tests
 
          PostalCode4 pc = record.PostalCode[0];
          Assert.IsTrue(pc.Location.Gemeente == "Amersfoort" && pc.Location.Geometry.Centroid == "POINT (155029.15793771204 463047.87594218826)");
+         Assert.IsNull(pc.Location.Geometry.WKT);
 
          await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
       }
@@ -105,9 +106,29 @@ namespace GISBlox.MCP.Server.Tests
 
          List<string> expectedIDs = ["3811", "3817", "3814", "3816", "3813", "3812", "3818"];
          Assert.IsTrue(record.PostalCode.All(pc => expectedIDs.Contains(pc.Id)));
+         Assert.IsTrue(record.PostalCode.All(pc => pc.Location.Geometry.WKT == null));
 
          await Task.Delay(API_QUOTA_DELAY * 2, CancellationToken.None);
       }
+
+      [TestMethod]
+      public async Task GetPostalCode4NeighboursWithSourceAndWktGeometries()
+      {
+         string id = "3811";
+         bool includeSource = true;
+         bool includeWktGeometries = true;
+         PostalCode4Record record = await PostalCodeTools.GetPostalCode4Neighbours(_client, id, includeSource, 28992, includeWktGeometries, CancellationToken.None);
+
+         Assert.IsNotNull(record, "Response is empty.");
+         Assert.HasCount(7, record.PostalCode);
+
+         List<string> expectedIDs = ["3811", "3817", "3814", "3816", "3813", "3812", "3818"];
+         Assert.IsTrue(record.PostalCode.All(pc => expectedIDs.Contains(pc.Id)));
+         Assert.IsTrue(record.PostalCode.All(pc => pc.Location.Geometry.WKT != null));
+
+         await Task.Delay(API_QUOTA_DELAY * 2, CancellationToken.None);
+      }
+
 
       [TestMethod]
       public async Task GetPostalCode4ByGeometry()
@@ -145,7 +166,7 @@ namespace GISBlox.MCP.Server.Tests
       {
          string wkt = "POINT(121843 487293)";
          int buffer = 200;   // meters, since CS of WKT is 28992.
-         PostalCode4Record record = await PostalCodeTools.GetPostalCode4ByGeometry(_client, wkt, buffer, (int)CoordinateSystem.RDNew, (int)CoordinateSystem.WGS84, CancellationToken.None);
+         PostalCode4Record record = await PostalCodeTools.GetPostalCode4ByGeometry(_client, wkt, buffer, (int)CoordinateSystem.RDNew, (int)CoordinateSystem.WGS84, cancellationToken: CancellationToken.None);
 
          Assert.IsNotNull(record, "Response is empty.");
          Assert.HasCount(2, record.PostalCode);
@@ -176,6 +197,31 @@ namespace GISBlox.MCP.Server.Tests
          Assert.AreEqual(expectedPostalCode, pc.Id);
          Assert.AreEqual(expectedGemeente, pc.Location.Gemeente);
          Assert.AreEqual(expectedWijk, pc.Location.Wijken);
+         Assert.IsNull(pc.Location.Geometry.WKT);
+
+         await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
+      }
+
+      [TestMethod]
+      public async Task GetPostalCode4ByAreaIncludeWktGeometries()
+      {
+         int gemeenteId = 513;
+         string expectedGemeente = "Gouda";
+
+         int wijkId = 51309;
+         string expectedWijk = "Westergouwe";
+
+         string expectedPostalCode = "2809";
+
+         PostalCode4Record record = await PostalCodeTools.GetPostalCode4ByArea(_client, gemeenteId, wijkId, includeWktGeometries: true, cancellationToken: CancellationToken.None);
+
+         Assert.IsNotNull(record, "Response is empty.");
+
+         PostalCode4 pc = record.PostalCode[0];
+         Assert.AreEqual(expectedPostalCode, pc.Id);
+         Assert.AreEqual(expectedGemeente, pc.Location.Gemeente);
+         Assert.AreEqual(expectedWijk, pc.Location.Wijken);
+         Assert.IsNotNull(pc.Location.Geometry.WKT);
 
          await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
       }
@@ -206,6 +252,7 @@ namespace GISBlox.MCP.Server.Tests
 
          PostalCode6 pc = record.PostalCode[0];
          Assert.IsTrue(pc.Location.Gemeente == "Amersfoort" && pc.Location.Geometry.Centroid == "POINT (155155.51254284632 463159.828901163)");
+         Assert.IsNull(pc.Location.Geometry.WKT);
 
          await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
       }
@@ -238,6 +285,25 @@ namespace GISBlox.MCP.Server.Tests
 
          List<string> expectedIDs = ["3069BS", "3069BK", "3069BL", "3069BN", "3069BP", "3069BR", "3069BM", "3069BT"];
          Assert.IsTrue(record.PostalCode.All(pc => expectedIDs.Contains(pc.Id)));
+         Assert.IsTrue(record.PostalCode.All(pc => pc.Location.Geometry.WKT == null));
+
+         await Task.Delay(API_QUOTA_DELAY * 2, CancellationToken.None);
+      }
+
+      [TestMethod]
+      public async Task GetPostalCode6NeighboursWithSourceAndWktGeometries()
+      {
+         string id = "3069BS";
+         bool includeSource = true;
+         bool includeGeometries = true;
+         PostalCode6Record record = await PostalCodeTools.GetPostalCode6Neighbours(_client, id, includeSource, 28992, includeGeometries, CancellationToken.None);
+
+         Assert.IsNotNull(record, "Response is empty.");
+         Assert.HasCount(8, record.PostalCode);
+
+         List<string> expectedIDs = ["3069BS", "3069BK", "3069BL", "3069BN", "3069BP", "3069BR", "3069BM", "3069BT"];
+         Assert.IsTrue(record.PostalCode.All(pc => expectedIDs.Contains(pc.Id)));
+         Assert.IsTrue(record.PostalCode.All(pc => pc.Location.Geometry.WKT != null));
 
          await Task.Delay(API_QUOTA_DELAY * 2, CancellationToken.None);
       }
@@ -278,7 +344,7 @@ namespace GISBlox.MCP.Server.Tests
       {
          string wkt = "POINT(121843 487293)";
          int buffer = 50;   // meters, since CS of WKT is 28992.
-         PostalCode6Record record = await PostalCodeTools.GetPostalCode6ByGeometry(_client, wkt, buffer, (int)CoordinateSystem.RDNew, (int)CoordinateSystem.WGS84, CancellationToken.None);
+         PostalCode6Record record = await PostalCodeTools.GetPostalCode6ByGeometry(_client, wkt, buffer, (int)CoordinateSystem.RDNew, (int)CoordinateSystem.WGS84, cancellationToken: CancellationToken.None);
 
          Assert.IsNotNull(record, "Response is empty.");
          Assert.HasCount(12, record.PostalCode);
@@ -304,7 +370,7 @@ namespace GISBlox.MCP.Server.Tests
 
          string expectedPostalCode = "2809RA";
 
-         PostalCode6Record record = await PostalCodeTools.GetPostalCode6ByArea(_client, gemeenteId, wijkId, buurtId, (int)CoordinateSystem.WGS84, CancellationToken.None);
+         PostalCode6Record record = await PostalCodeTools.GetPostalCode6ByArea(_client, gemeenteId, wijkId, buurtId, (int)CoordinateSystem.WGS84, cancellationToken: CancellationToken.None);
 
          Assert.IsNotNull(record, "Response is empty.");
 
@@ -313,6 +379,35 @@ namespace GISBlox.MCP.Server.Tests
          Assert.AreEqual(expectedGemeente, pc.Location.Gemeente);
          Assert.AreEqual(expectedWijk, pc.Location.Wijk);
          Assert.AreEqual(expectedBuurt, pc.Location.Buurt);
+         Assert.IsNull(pc.Location.Geometry.WKT);
+
+         await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
+      }
+
+      [TestMethod]
+      public async Task GetPostalCode6ByAreaIncludeWktGeometries()
+      {
+         int gemeenteId = 513;
+         string expectedGemeente = "Gouda";
+
+         int wijkId = 51309;
+         string expectedWijk = "Westergouwe";
+
+         int buurtId = 5130904;
+         string expectedBuurt = "Tuinenbuurt";
+
+         string expectedPostalCode = "2809RA";
+
+         PostalCode6Record record = await PostalCodeTools.GetPostalCode6ByArea(_client, gemeenteId, wijkId, buurtId, (int)CoordinateSystem.WGS84, true, CancellationToken.None);
+
+         Assert.IsNotNull(record, "Response is empty.");
+
+         PostalCode6 pc = record.PostalCode[0];
+         Assert.AreEqual(expectedPostalCode, pc.Id);
+         Assert.AreEqual(expectedGemeente, pc.Location.Gemeente);
+         Assert.AreEqual(expectedWijk, pc.Location.Wijk);
+         Assert.AreEqual(expectedBuurt, pc.Location.Buurt);
+         Assert.IsNotNull(pc.Location.Geometry.WKT);
 
          await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
       }

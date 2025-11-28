@@ -12,69 +12,67 @@ using System.ComponentModel;
 internal class PostalCodeTools
 {
    [McpServerTool(Name = "postalcodes_pc4_get")]
-   [Description("Returns the postal code (4 digits) record for a given postal code ID.")]
-   public static async Task<PostalCode4Record> GetPostalCode4Record(GISBloxClient gisbloxClient, string id, int epsg = (int)CoordinateSystem.RDNew, CancellationToken cancellationToken = default)
-   {
-      var epsgEnum = (CoordinateSystem)epsg;
-      return await gisbloxClient.PostalCodes.GetPostalCodeRecord<PostalCode4Record>(id, epsgEnum, cancellationToken);
+   [Description("Returns the postal code (4 digits) record for a given postal code ID. Can include its WKT geometries if includeWktGeometries is true.")]
+   public static async Task<PostalCode4Record> GetPostalCode4Record(GISBloxClient gisbloxClient, string id, int epsg = (int)CoordinateSystem.RDNew, bool includeWktGeometries = false, CancellationToken cancellationToken = default)
+   {     
+      var pcRecord = await gisbloxClient.PostalCodes.GetPostalCodeRecord<PostalCode4Record>(id, (CoordinateSystem)epsg, cancellationToken);
+      return includeWktGeometries ? pcRecord : RemoveWktGeometries(pcRecord);
    }
 
    [McpServerTool(Name = "postalcodes_pc6_get")]
-   [Description("Returns the postal code (6 digits) record for a given postal code ID.")]
-   public static async Task<PostalCode6Record> GetPostalCode6Record(GISBloxClient gisbloxClient, string id, int epsg = (int)CoordinateSystem.RDNew, CancellationToken cancellationToken = default)
+   [Description("Returns the postal code (6 digits) record for a given postal code ID. Can include its WKT geometries if includeWktGeometries is true.")]
+   public static async Task<PostalCode6Record> GetPostalCode6Record(GISBloxClient gisbloxClient, string id, int epsg = (int)CoordinateSystem.RDNew, bool includeWktGeometries = false, CancellationToken cancellationToken = default)
    {
-      var epsgEnum = (CoordinateSystem)epsg;
-      return await gisbloxClient.PostalCodes.GetPostalCodeRecord<PostalCode6Record>(id, epsgEnum, cancellationToken);
+      var pcRecord = await gisbloxClient.PostalCodes.GetPostalCodeRecord<PostalCode6Record>(id, (CoordinateSystem)epsg, cancellationToken);
+      return includeWktGeometries ? pcRecord : RemoveWktGeometries(pcRecord);
    }
 
    [McpServerTool(Name = "postalcodes_pc4_neighbours_list")]
-   [Description("Returns neighbouring postal codes (4 digits) for a given postal code ID, with option to include the source postal code.")]
-   public static async Task<PostalCode4Record> GetPostalCode4Neighbours(GISBloxClient gisbloxClient, string id, bool includeSourcePostalCode = false, int epsg = (int)CoordinateSystem.RDNew, CancellationToken cancellationToken = default)
+   [Description("Returns neighbouring postal codes (4 digits) for a given postal code ID, with option to include the source postal code. Can include WKT geometries if includeWktGeometries is true.")]
+   public static async Task<PostalCode4Record> GetPostalCode4Neighbours(GISBloxClient gisbloxClient, string id, bool includeSourcePostalCode = false, int epsg = (int)CoordinateSystem.RDNew, bool includeWktGeometries = false, CancellationToken cancellationToken = default)
    {
-      var epsgEnum = (CoordinateSystem)epsg;
-      return await gisbloxClient.PostalCodes.GetPostalCodeNeighbours<PostalCode4Record>(id, includeSourcePostalCode, epsgEnum, cancellationToken);
+      var neighbours = await gisbloxClient.PostalCodes.GetPostalCodeNeighbours<PostalCode4Record>(id, includeSourcePostalCode, (CoordinateSystem)epsg, cancellationToken);
+      return includeWktGeometries ? neighbours : RemoveWktGeometries(neighbours);
    }
 
    [McpServerTool(Name = "postalcodes_pc6_neighbours_list")]
-   [Description("Returns neighbouring postal codes (6 digits) for a given postal code ID, with option to include the source postal code.")]
-   public static async Task<PostalCode6Record> GetPostalCode6Neighbours(GISBloxClient gisbloxClient, string id, bool includeSourcePostalCode = false, int epsg = (int)CoordinateSystem.RDNew, CancellationToken cancellationToken = default)
-   {
-      var epsgEnum = (CoordinateSystem)epsg;
-      return await gisbloxClient.PostalCodes.GetPostalCodeNeighbours<PostalCode6Record>(id, includeSourcePostalCode, epsgEnum, cancellationToken);
+   [Description("Returns neighbouring postal codes (6 digits) for a given postal code ID, with option to include the source postal code. Can include WKT geometries if includeWktGeometries is true.")]
+   public static async Task<PostalCode6Record> GetPostalCode6Neighbours(GISBloxClient gisbloxClient, string id, bool includeSourcePostalCode = false, int epsg = (int)CoordinateSystem.RDNew, bool includeWktGeometries = false, CancellationToken cancellationToken = default)
+   {  
+      var neighbours = await gisbloxClient.PostalCodes.GetPostalCodeNeighbours<PostalCode6Record>(id, includeSourcePostalCode, (CoordinateSystem)epsg, cancellationToken);
+      return includeWktGeometries ? neighbours : RemoveWktGeometries(neighbours);
    }
 
    [McpServerTool(Name = "postalcodes_pc4_geometry_list")]
-   [Description("Returns the postal codes (4 digits) for a given geometry in WKT format, with optional buffer in meters.")]
-   public static async Task<PostalCode4Record> GetPostalCode4ByGeometry(GISBloxClient gisbloxClient, string wkt, int buffer = 0, int wktEpsg = (int)CoordinateSystem.RDNew, int targetEpsg = (int)CoordinateSystem.RDNew, CancellationToken cancellationToken = default)
-   {
-      var wktEpsgEnum = (CoordinateSystem)wktEpsg;
-      var targetEpsgEnum = (CoordinateSystem)targetEpsg;
-      return await gisbloxClient.PostalCodes.GetPostalCodeByGeometry<PostalCode4Record>(wkt, buffer, wktEpsgEnum, targetEpsgEnum, cancellationToken);
+   [Description("Returns the postal codes (4 digits) for a given geometry in WKT format, with optional buffer in meters. Can include WKT geometries if includeWktGeometries is true.")]
+   public static async Task<PostalCode4Record> GetPostalCode4ByGeometry(GISBloxClient gisbloxClient, string wkt, int buffer = 0, int wktEpsg = (int)CoordinateSystem.RDNew, int targetEpsg = (int)CoordinateSystem.RDNew, bool includeWktGeometries = false, CancellationToken cancellationToken = default)
+   {     
+      var pcRecord = await gisbloxClient.PostalCodes.GetPostalCodeByGeometry<PostalCode4Record>(wkt, buffer, (CoordinateSystem)wktEpsg, (CoordinateSystem)targetEpsg, cancellationToken);
+      return includeWktGeometries ? pcRecord : RemoveWktGeometries(pcRecord);
    }
 
    [McpServerTool(Name = "postalcodes_pc6_geometry_list")]
-   [Description("Returns the postal codes (6 digits) for a given geometry in WKT format, with optional buffer in meters.")]
-   public static async Task<PostalCode6Record> GetPostalCode6ByGeometry(GISBloxClient gisbloxClient, string wkt, int buffer = 0, int wktEpsg = (int)CoordinateSystem.RDNew, int targetEpsg = (int)CoordinateSystem.RDNew, CancellationToken cancellationToken = default)
-   {
-      var wktEpsgEnum = (CoordinateSystem)wktEpsg;
-      var targetEpsgEnum = (CoordinateSystem)targetEpsg;
-      return await gisbloxClient.PostalCodes.GetPostalCodeByGeometry<PostalCode6Record>(wkt, buffer, wktEpsgEnum, targetEpsgEnum, cancellationToken);
+   [Description("Returns the postal codes (6 digits) for a given geometry in WKT format, with optional buffer in meters. Can include WKT geometries if includeWktGeometries is true.")]
+   public static async Task<PostalCode6Record> GetPostalCode6ByGeometry(GISBloxClient gisbloxClient, string wkt, int buffer = 0, int wktEpsg = (int)CoordinateSystem.RDNew, int targetEpsg = (int)CoordinateSystem.RDNew, bool includeWktGeometries = false, CancellationToken cancellationToken = default)
+   {      
+      var pcRecord = await gisbloxClient.PostalCodes.GetPostalCodeByGeometry<PostalCode6Record>(wkt, buffer, (CoordinateSystem)wktEpsg, (CoordinateSystem)targetEpsg, cancellationToken);
+      return includeWktGeometries ? pcRecord : RemoveWktGeometries(pcRecord);
    }
 
    [McpServerTool(Name = "postalcodes_pc4_area_list")]
-   [Description("Returns the postal codes (4 digits) for a given municipality ID, district ID and optionally neighborhood ID.")]
-   public static async Task<PostalCode4Record> GetPostalCode4ByArea(GISBloxClient gisbloxClient, int gemeenteId, int wijkId, int buurtId = -1, int epsg = (int)CoordinateSystem.RDNew, CancellationToken cancellationToken = default)
-   {
-      var epsgEnum = (CoordinateSystem)epsg;
-      return await gisbloxClient.PostalCodes.GetPostalCodeByArea<PostalCode4Record>(gemeenteId, wijkId, buurtId, epsgEnum, cancellationToken);
+   [Description("Returns the postal codes (4 digits) for a given municipality ID, district ID and optionally neighborhood ID. Can include WKT geometries if includeWktGeometries is true.")]
+   public static async Task<PostalCode4Record> GetPostalCode4ByArea(GISBloxClient gisbloxClient, int gemeenteId, int wijkId, int buurtId = -1, int epsg = (int)CoordinateSystem.RDNew, bool includeWktGeometries = false, CancellationToken cancellationToken = default)
+   {      
+      var pcRecord = await gisbloxClient.PostalCodes.GetPostalCodeByArea<PostalCode4Record>(gemeenteId, wijkId, buurtId, (CoordinateSystem)epsg, cancellationToken);
+      return includeWktGeometries ? pcRecord : RemoveWktGeometries(pcRecord);
    }
 
    [McpServerTool(Name = "postalcodes_pc6_area_list")]
-   [Description("Returns the postal codes (6 digits) for a given municipality ID, district ID and optionally neighborhood ID.")]
-   public static async Task<PostalCode6Record> GetPostalCode6ByArea(GISBloxClient gisbloxClient, int gemeenteId, int wijkId, int buurtId = -1, int epsg = (int)CoordinateSystem.RDNew, CancellationToken cancellationToken = default)
-   {
-      var epsgEnum = (CoordinateSystem)epsg;
-      return await gisbloxClient.PostalCodes.GetPostalCodeByArea<PostalCode6Record>(gemeenteId, wijkId, buurtId, epsgEnum, cancellationToken);
+   [Description("Returns the postal codes (6 digits) for a given municipality ID, district ID and optionally neighborhood ID. Can include WKT geometries if includeWktGeometries is true.")]
+   public static async Task<PostalCode6Record> GetPostalCode6ByArea(GISBloxClient gisbloxClient, int gemeenteId, int wijkId, int buurtId = -1, int epsg = (int)CoordinateSystem.RDNew, bool includeWktGeometries = false, CancellationToken cancellationToken = default)
+   {      
+      var pcRecord = await gisbloxClient.PostalCodes.GetPostalCodeByArea<PostalCode6Record>(gemeenteId, wijkId, buurtId, (CoordinateSystem)epsg, cancellationToken);
+      return includeWktGeometries ? pcRecord : RemoveWktGeometries(pcRecord);
    }
 
    [McpServerTool(Name = "postalcodes_key_figures_list")]
@@ -83,4 +81,20 @@ internal class PostalCodeTools
    {
       return await gisbloxClient.PostalCodes.GetKeyFigures(id, cancellationToken);
    }
+
+   #region Internal Helpers
+
+   private static PostalCode4Record RemoveWktGeometries(PostalCode4Record record)
+   {
+      record.PostalCode.ForEach(pc => { pc.Location.Geometry.WKT = null; });
+      return record;
+   }
+
+   private static PostalCode6Record RemoveWktGeometries(PostalCode6Record record)
+   {
+      record.PostalCode.ForEach(pc => { pc.Location.Geometry.WKT = null; });
+      return record;
+   }
+
+   #endregion
 }
