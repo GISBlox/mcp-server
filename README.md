@@ -8,7 +8,8 @@ The GISBlox MCP Server enables your AI applications to tap into advanced geospat
 - Retrieve **Dutch postal code data** for marketing, logistics, and analysis  
 - Generate quick **visualizations and insights** from postal code datasets  
 - Convert **Well‑Known Text (WKT)** and **Well‑Known Binary (WKB)** into **GeoJSON**, and vice-versa
-- Project and transform geospatial data across coordinate systems with ease  
+- **Project** and transform geospatial data across coordinate systems with ease  
+- Get access to **usage data** and insights of tracked interactive maps 
 
 ### Why Use This Server?  
 - **AI‑ready**: Designed for MCP, making it easy to connect geospatial intelligence to your AI workflows  
@@ -48,6 +49,11 @@ Try these prompts after setting up the MCP server:
 ### Conversion
 - "Convert this WKT geometry string into a GeoJson feature collection"
 
+### Map Analytics
+- "List the maps that are tracked by Map Analytics"
+- "Which map has the highest engagement numbers in the last 2 weeks?"
+- "Show the map KPIs of map XYZ"
+
 ### Postal Code Data
 - "List the Dutch gemeenten and sort them alphabetically"
 - "Give me some key demographics for postal code 3811"
@@ -66,6 +72,13 @@ GISBlox API Tools available via the MCP server:
 ### Conversion tool
 
 Converts GeoJson into WKB and WKT geometry objects, and vice versa, using the [GISBlox Conversion API](https://services.gisblox.com/index.html#operations-tag-Conversion).
+
+### Map Analytics tool
+
+Provides access to map analytics data using the [GISBlox Map Analytics API](https://services.gisblox.com/index.html#operations-tag-Map_Analytics). Features include:
+- List tracked maps
+- Get map KPIs for all maps, or a specific map
+- Retrieve engagement metrics
 
 ### Postal Code Data tool
 
