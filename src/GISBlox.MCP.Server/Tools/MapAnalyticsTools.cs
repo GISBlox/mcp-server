@@ -8,7 +8,7 @@ using ModelContextProtocol.Server;
 using System.ComponentModel;
 
 [McpServerToolType]
-[Description("tbd")]
+[Description("Provides access to map analytics data using the GISBlox Map Analytics API.")]
 internal class MapAnalyticsTools
 {
    [McpServerTool(Name = "analytics_maps_list")]
