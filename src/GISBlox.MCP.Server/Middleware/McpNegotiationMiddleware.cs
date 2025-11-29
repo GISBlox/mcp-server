@@ -1,6 +1,8 @@
 using GISBlox.MCP.Server.Http;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace GISBlox.MCP.Server.Middleware;
 
@@ -17,7 +19,9 @@ internal class McpNegotiationMiddleware(RequestDelegate next, string path)
 
    private static readonly JsonSerializerOptions CachedJsonSerializerOptions = new()
    {
-      PropertyNamingPolicy = null
+      PropertyNamingPolicy = null,
+      Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+      DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
    };
 
    public async Task InvokeAsync(HttpContext context)
@@ -28,15 +32,14 @@ internal class McpNegotiationMiddleware(RequestDelegate next, string path)
          return;
       }
 
-      // If content-type explicitly application/json OR accept prefers JSON-RPC result and body looks like JSON -> JSON-RPC
       var contentType = context.Request.ContentType ?? string.Empty;
       var accept = context.Request.Headers.Accept.ToString();
 
       if (contentType.Contains("application/json", StringComparison.OrdinalIgnoreCase) ||
           accept.Contains("application/json", StringComparison.OrdinalIgnoreCase))
       {
-         // Peek body minimally
          context.Request.EnableBuffering();
+
          using var reader = new StreamReader(context.Request.Body, Encoding.UTF8, leaveOpen: true);
          char[] preview = new char[1];
          int read = await reader.ReadAsync(preview, 0, 1);
@@ -44,20 +47,20 @@ internal class McpNegotiationMiddleware(RequestDelegate next, string path)
 
          if (read == 1 && (preview[0] == '{' || preview[0] == '['))
          {
-            // Handle JSON-RPC directly and short-circuit
             var jsonRpcResult = await McpRestEndpointsExtensions.JsonRpcEntryAsync(context);
-            
-            // Response already written if result is IActionResult; if it's a serializable object write JSON.
             if (jsonRpcResult is not IResult r)
+            {               
+               // Use Results.Json to avoid double serialization and match endpoint behavior
+               await Results.Json(jsonRpcResult, CachedJsonSerializerOptions).ExecuteAsync(context);
+            }
+            else
             {
-               context.Response.ContentType = "application/json";
-               await JsonSerializer.SerializeAsync(context.Response.Body, jsonRpcResult, CachedJsonSerializerOptions, context.RequestAborted);
+               await r.ExecuteAsync(context);
             }
             return;
          }
       }
 
-      // Fallback to streaming transport
       await _next(context);
    }
 }
