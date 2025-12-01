@@ -321,10 +321,9 @@ internal static partial class McpRestEndpointsExtensions
       if (value is string s)
          return [new { type = "text", text = s }];
 
-      // For non-string results, return as a json content block to avoid token issues in text
-      return [
-          new { type = "json", data = value }
-      ];
+      // Serialize to JSON string - when the outer envelope is serialized, this string will be properly escaped
+      string json = JsonSerializer.Serialize(value, SafeJsonOptions);
+      return [new { type = "text", text = json }];
    }
 
    private static string SanitizeToolName(string value)
@@ -386,9 +385,16 @@ internal static partial class McpRestEndpointsExtensions
       PropertyNameCaseInsensitive = true,
       DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
       PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-      Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+      Encoder = JavaScriptEncoder.Default
    };
    
+   private static readonly JsonSerializerOptions SafeJsonOptions = new()
+   {
+      PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+      DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+      Encoder = JavaScriptEncoder.Default
+   };
+
    private sealed class InvokeRequest
    {
       public string Name { get; set; } = string.Empty;
