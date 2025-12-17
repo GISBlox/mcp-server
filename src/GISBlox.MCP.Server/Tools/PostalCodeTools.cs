@@ -51,7 +51,7 @@ internal class PostalCodeTools
    }
 
    [McpServerTool(Name = "GeometryToPostalCodes")]
-   [Description("Returns the postal codes for a given geometry in WKT format, with optional buffer in meters. Can include WKT geometries if includeWktGeometries is true. Will return 6 digit postal codes if streetLevelPostCodes is true, else it returns 4 digit ones.")]
+   [Description("Returns the postal codes for a given geometry in WKT format, with optional buffer in meters. Can include WKT geometries if includeWktGeometries is true. Will return 6 digit postal codes if streetLevelPostCodes is true, else it returns 4 digit ones (default).")]
    public static async Task<IPostalCodeRecord> GetPostalCodeByGeometry(GISBloxClient gisbloxClient, string wkt, int buffer = 0, int wktEpsg = (int)CoordinateSystem.RDNew, int targetEpsg = (int)CoordinateSystem.RDNew, bool streetLevelPostCodes = false, bool includeWktGeometries = false, CancellationToken cancellationToken = default)
    {
       if (!streetLevelPostCodes)
@@ -66,6 +66,21 @@ internal class PostalCodeTools
       }
    }
 
+   [McpServerTool(Name = "AreaToPostalCodes")]
+   [Description("Returns the postal codes for a given municipality ID, district ID and optionally neighborhood ID. Can include WKT geometries if includeWktGeometries is true. Will return 6 digit postal codes if streetLevelPostCodes is true, else it returns 4 digit ones (default).")]
+   public static async Task<IPostalCodeRecord> GetPostalCodeByArea(GISBloxClient gisbloxClient, int gemeenteId, int wijkId, int buurtId = -1, int epsg = (int)CoordinateSystem.RDNew, bool streetLevelPostCodes = false, bool includeWktGeometries = false, CancellationToken cancellationToken = default)
+   {
+      if (!streetLevelPostCodes)
+      {
+         var pcRecord = await gisbloxClient.PostalCodes.GetPostalCodeByArea<PostalCode4Record>(gemeenteId, wijkId, buurtId, (CoordinateSystem)epsg, cancellationToken);
+         return includeWktGeometries ? pcRecord : RemoveWktGeometries(pcRecord);
+      }
+      else
+      {
+         var pcRecord = await gisbloxClient.PostalCodes.GetPostalCodeByArea<PostalCode6Record>(gemeenteId, wijkId, buurtId, (CoordinateSystem)epsg, cancellationToken);
+         return includeWktGeometries ? pcRecord : RemoveWktGeometries(pcRecord);
+      }
+   }
 
    [McpServerTool(Name = "PostalCodeKeyFiguresList")]
    [Description("Returns the key figures (kerncijfers) for a given postal code.")]

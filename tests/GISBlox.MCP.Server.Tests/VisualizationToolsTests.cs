@@ -44,7 +44,7 @@ namespace GISBlox.MCP.Server.Tests
       public async Task VisualizePostalCode4()
       {
          string id = "3069";
-         string url = await VisualizationTools.VisualizePostalCode4(_client, id, CancellationToken.None);
+         string url = await VisualizationTools.VisualizePostalCode(_client, id, CancellationToken.None);
 
          Assert.IsFalse(string.IsNullOrWhiteSpace(url), "Response is empty.");
 
@@ -56,7 +56,7 @@ namespace GISBlox.MCP.Server.Tests
       public async Task VisualizePostalCode4Neighbours()
       {
          string id = "2809";
-         string url = await VisualizationTools.VisualizePostalCode4Neighbours(_client, id, CancellationToken.None);
+         string url = await VisualizationTools.VisualizePostalCodeNeighbours(_client, id, CancellationToken.None);
 
          Assert.IsFalse(string.IsNullOrWhiteSpace(url), "Response is empty.");
 
@@ -72,7 +72,7 @@ namespace GISBlox.MCP.Server.Tests
       public async Task VisualizePostalCode6()
       {
          string id = "2809RA";
-         string url = await VisualizationTools.VisualizePostalCode6(_client, id, CancellationToken.None);
+         string url = await VisualizationTools.VisualizePostalCode(_client, id, CancellationToken.None);
 
          Assert.IsFalse(string.IsNullOrWhiteSpace(url), "Response is empty.");
 
@@ -84,7 +84,7 @@ namespace GISBlox.MCP.Server.Tests
       public async Task VisualizePostalCode6Neighbours()
       {
          string id = "2809RA";
-         string url = await VisualizationTools.VisualizePostalCode6Neighbours(_client, id, CancellationToken.None);
+         string url = await VisualizationTools.VisualizePostalCodeNeighbours(_client, id, CancellationToken.None);
 
          Assert.IsFalse(string.IsNullOrWhiteSpace(url), "Response is empty.");
 
