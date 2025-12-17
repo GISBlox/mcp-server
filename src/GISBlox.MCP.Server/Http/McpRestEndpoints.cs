@@ -194,12 +194,27 @@ internal static partial class McpRestEndpointsExtensions
                         inputSchema["required"] = required;
                      }
 
-                     return new
+                     // Build the tool object with category and tags
+                     var tool = new Dictionary<string, object?>
                      {
-                        name = safe,
-                        description = d.Description ?? string.Empty,
-                        inputSchema
+                        ["name"] = safe,
+                        ["description"] = d.Description ?? string.Empty,
+                        ["inputSchema"] = inputSchema
                      };
+
+                     // Add category if available
+                     if (!string.IsNullOrWhiteSpace(d.Category))
+                     {
+                        tool["category"] = d.Category;
+                     }
+
+                     // Add tags if available
+                     if (d.Tags != null && d.Tags.Count > 0)
+                     {
+                        tool["tags"] = d.Tags;
+                     }
+
+                     return tool;
                   }).ToArray();
 
                   return JsonRpcResult(id, new { tools });
