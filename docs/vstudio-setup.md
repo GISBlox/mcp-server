@@ -47,7 +47,7 @@ Refer to the [Hosted MCP Server setup guide](hosted-mcp-guide.md) if you do not 
      --data '{
        "method": "tool/invoke",
        "params": {
-           "name": "postalcodes_gwb_wijken_in_gemeente_name_list",
+           "name": "WijkenByGemeenteNameList",
            "arguments": {
            "gemeente": "Groningen"
            }

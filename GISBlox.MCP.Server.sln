@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36429.23
+# Visual Studio Version 18
+VisualStudioVersion = 18.1.11304.174 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GISBlox.MCP.Server", "src\GISBlox.MCP.Server\GISBlox.MCP.Server.csproj", "{C02235E8-E8B9-4E27-B661-D3935CA55BA9}"
 EndProject
@@ -32,8 +32,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "images", "images", "{144C2D
 		docs\images\hosted-vscode-setup-2.png = docs\images\hosted-vscode-setup-2.png
 		docs\images\hosted-vscode-setup-3.png = docs\images\hosted-vscode-setup-3.png
 		docs\images\hosted-vscode-setup-4.png = docs\images\hosted-vscode-setup-4.png
-		docs\images\hosted-vscode-setup-5.png = docs\images\hosted-vscode-setup-5.png
-		docs\images\hosted-vscode-setup-6.png = docs\images\hosted-vscode-setup-6.png
+		docs\images\hosted-vscode-setup-5-1.png = docs\images\hosted-vscode-setup-5-1.png
+		docs\images\hosted-vscode-setup-6-1.png = docs\images\hosted-vscode-setup-6-1.png
 		docs\images\hosted-vstudio-setup-1.png = docs\images\hosted-vstudio-setup-1.png
 		docs\images\hosted-vstudio-setup-2.png = docs\images\hosted-vstudio-setup-2.png
 		docs\images\hosted-vstudio-setup-3.png = docs\images\hosted-vstudio-setup-3.png

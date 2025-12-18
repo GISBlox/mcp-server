@@ -13,7 +13,7 @@ using System.ComponentModel;
 [Description("Provides account information using the GISBlox Info API.")]
 internal class InfoTools
 {
-   [McpServerTool(Name = "Subscriptions")]
+   [McpServerTool(Name = "SubscriptionsList")]
    [Description("Returns the subscriptions of the authorized GISBlox user.")]
    public static async Task<List<Subscription>> GetSubscriptions(GISBloxClient gisbloxClient, CancellationToken cancellationToken = default)
    {

@@ -101,7 +101,7 @@ internal class VisualizationTools
       return CreateGeoJsonIoUrl(dataLakeUrl);
    }
 
-   [McpServerTool(Name = "ZipChatQuery")]
+   [McpServerTool(Name = "ZipchatQuery")]
    [Description("Ask ZipChat Copilot for information on the given postal code and have it generate code to retrieve postal code data in third-party applications.")]
    public static string AskZipChatCopilot(string postalCodeId, bool showNeighbours = false)
    {

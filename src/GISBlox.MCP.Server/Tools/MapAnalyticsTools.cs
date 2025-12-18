@@ -13,7 +13,7 @@ using System.ComponentModel;
 [Description("Provides access to map analytics data using the GISBlox Map Analytics API.")]
 internal class MapAnalyticsTools
 {
-   [McpServerTool(Name = "MapList")]
+   [McpServerTool(Name = "MapsList")]
    [Description("Returns a list of maps that are tracked for a customer.")]
    public static async Task<List<CustomerMap>> ListTrackedMaps(GISBloxClient gisbloxClient, CancellationToken cancellationToken = default)
    {
@@ -21,7 +21,7 @@ internal class MapAnalyticsTools
       return result.Maps;
    }
 
-   [McpServerTool(Name = "AllMapsKpisList")]
+   [McpServerTool(Name = "MapsKpisListAll")]
    [Description("Gets the KPIs for all maps within a date range of 7, 14, 21 or 31 days.")]
    public static async Task<MapKpiRecord> GetMapsKpis(GISBloxClient gisbloxClient, int dateRange = (int)AnalyticsDateRangeEnum.OneWeek, string? endDate = null, CancellationToken cancellationToken = default)
    {  
