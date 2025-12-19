@@ -8,10 +8,12 @@ using ModelContextProtocol.Server;
 using System.ComponentModel;
 
 [McpServerToolType]
+[GISBlox.MCP.Server.Attributes.Category("Spatial Insights")]
+[GISBlox.MCP.Server.Attributes.Tags("Map Analytics", "Analytics", "KPIs", "Engagement")]
 [Description("Provides access to map analytics data using the GISBlox Map Analytics API.")]
 internal class MapAnalyticsTools
 {
-   [McpServerTool(Name = "analytics_maps_list")]
+   [McpServerTool(Name = "MapsList")]
    [Description("Returns a list of maps that are tracked for a customer.")]
    public static async Task<List<CustomerMap>> ListTrackedMaps(GISBloxClient gisbloxClient, CancellationToken cancellationToken = default)
    {
@@ -19,21 +21,21 @@ internal class MapAnalyticsTools
       return result.Maps;
    }
 
-   [McpServerTool(Name = "analytics_maps_kpis_get")]
+   [McpServerTool(Name = "MapsKpisListAll")]
    [Description("Gets the KPIs for all maps within a date range of 7, 14, 21 or 31 days.")]
    public static async Task<MapKpiRecord> GetMapsKpis(GISBloxClient gisbloxClient, int dateRange = (int)AnalyticsDateRangeEnum.OneWeek, string? endDate = null, CancellationToken cancellationToken = default)
    {  
       return await gisbloxClient.MapAnalytics.GetMapsKpis((AnalyticsDateRangeEnum)dateRange, ParseDate(endDate), cancellationToken);
    }
 
-   [McpServerTool(Name = "analytics_map_kpis_get")]
+   [McpServerTool(Name = "MapKpisGet")]
    [Description("Gets the KPIs for a specific map within a date range of 7, 14, 21 or 31 days.")]
    public static async Task<MapKpiRecord> GetMapKpis(GISBloxClient gisbloxClient, string mapId, int dateRange = (int)AnalyticsDateRangeEnum.OneWeek, string? endDate = null, CancellationToken cancellationToken = default)
    {  
       return await gisbloxClient.MapAnalytics.GetMapKpis(mapId, (AnalyticsDateRangeEnum)dateRange, ParseDate(endDate), cancellationToken);
    }
 
-   [McpServerTool(Name = "analytics_map_engagement_get")]
+   [McpServerTool(Name = "MapEngagementGet")]
    [Description("Gets engagement metrics for a specific map within a date range of 7, 14, 21 or 31 days.")]
    public static async Task<EngagementRecord> GetMapEngagement(GISBloxClient gisbloxClient, string mapId, int dateRange = (int)AnalyticsDateRangeEnum.OneWeek, string? endDate = null, CancellationToken cancellationToken = default)
    {

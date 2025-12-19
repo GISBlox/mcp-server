@@ -55,13 +55,13 @@ Refer to the [README](../README.md#%EF%B8%8F-usage) for more information on obta
 
    ![vs-code-4](./images/hosted-vscode-setup-4.png)
 
-   ![vs-code-4](./images/hosted-vscode-setup-5.png)
+   ![vs-code-4](./images/hosted-vscode-setup-5-1.png)
 
 8. Test the setup with a prompt like: `Give me some key demographics for postal code 3811`.
 
 9. When prompted, allow Copilot to use the tools provided by the MCP server:
  
-   ![vs-code-5](./images/hosted-vscode-setup-6.png)
+   ![vs-code-5](./images/hosted-vscode-setup-6-1.png)
 
 ### 2.2 Visual Studio
 
@@ -195,7 +195,7 @@ curl --request POST \
   "result": {
     "tools": [
       {
-        "name": "conversion_wkt_to_geojson_get",
+        "name": "WktToGeoJson",
         "description": "Converts a WKT geometry string into a GeoJson Feature(Collection) string.",
         "inputSchema": {          
           "properties": {
@@ -209,7 +209,7 @@ curl --request POST \
         }
       },
       {
-        "name": "conversion_geojson_to_wkt_get",
+        "name": "GeoJsonToWkt",
         "description": "Converts a GeoJson Feature(Collection) string into one or more WKT objects.",
         "inputSchema": {          
           "properties": {
@@ -236,7 +236,7 @@ curl --request POST \
   --data '{
     "method": "tool/invoke",
     "params": {
-        "name": "postalcodes_gwb_wijken_in_gemeente_id_list",
+        "name": "WijkenByGemeenteIdList",
         "arguments": {
         "gemeenteId": 308
         }

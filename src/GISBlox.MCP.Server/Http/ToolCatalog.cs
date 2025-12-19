@@ -4,6 +4,7 @@
 
 using System.Reflection;
 using System.Text.Json;
+using GISBlox.MCP.Server.Attributes;
 using ModelContextProtocol.Server;
 
 namespace GISBlox.MCP.Server.Http;
@@ -172,6 +173,13 @@ internal static partial class McpRestEndpointsExtensions
 
             foreach (var t in toolTypes)
             {
+               // Extract Category and Tags from the tool type
+               var categoryAttr = t.GetCustomAttribute<CategoryAttribute>(inherit: false);
+               var tagsAttr = t.GetCustomAttribute<Attributes.TagsAttribute>(inherit: false);
+
+               string? category = categoryAttr?.Category;
+               IReadOnlyList<string> tags = tagsAttr?.Tags ?? [];
+
                foreach (var mi in t.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
                {
                   if (!mi.IsDefined(typeof(McpServerToolAttribute), inherit: false))
@@ -194,7 +202,7 @@ internal static partial class McpRestEndpointsExtensions
                       .ToList()
                       .AsReadOnly();
 
-                  var dto = new ToolDescriptorDto(name, fullName, desc, parameters);
+                  var dto = new ToolDescriptorDto(name, fullName, desc, parameters, category, tags);
                   methods.Add((t, mi, dto));
                }
             }
@@ -232,7 +240,13 @@ internal static partial class McpRestEndpointsExtensions
 
    #region DTOs    
 
-   internal sealed record ToolDescriptorDto(string Name, string FullName, string? Description, IReadOnlyList<ToolParameterDto> Parameters);
+   internal sealed record ToolDescriptorDto(
+      string Name, 
+      string FullName, 
+      string? Description, 
+      IReadOnlyList<ToolParameterDto> Parameters,
+      string? Category,
+      IReadOnlyList<string> Tags);
 
    internal sealed record ToolParameterDto(string Name, string Type, bool IsOptional, bool HasDefaultValue);
 
