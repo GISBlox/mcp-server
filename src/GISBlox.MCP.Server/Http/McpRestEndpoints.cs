@@ -178,6 +178,13 @@ internal static partial class McpRestEndpointsExtensions
                         var schemaType = MapParameterTypeToJsonSchemaType(p.Type);
                         var paramDef = new Dictionary<string, object> { ["type"] = schemaType };
                         
+                        // Add items schema for array types
+                        var itemsSchema = GetJsonSchemaItemsType(p.Type);
+                        if (itemsSchema != null)
+                        {
+                           paramDef["items"] = itemsSchema;
+                        }
+                        
                         if (!string.IsNullOrWhiteSpace(p.Description))
                         {
                            paramDef["description"] = p.Description;
@@ -359,6 +366,19 @@ internal static partial class McpRestEndpointsExtensions
    private static string MapParameterTypeToJsonSchemaType(string type)
    {
       var t = type.TrimEnd('?');
+      
+      // Handle array types
+      if (t.EndsWith("[][]"))
+      {
+         // 2D array -> array of arrays
+         return "array";
+      }
+      if (t.EndsWith("[]"))
+      {
+         // 1D array
+         return "array";
+      }
+      
       return t switch
       {
          "string" => "string",
@@ -367,6 +387,38 @@ internal static partial class McpRestEndpointsExtensions
          "bool" or "boolean" => "boolean",
          _ => "string" // fallback
       };
+   }
+
+   private static Dictionary<string, object>? GetJsonSchemaItemsType(string type)
+   {
+      var t = type.TrimEnd('?');
+
+      if (t.EndsWith("[][]"))
+      {
+         // 2D array -> items are arrays
+         var elementType = t[..^4]; // Remove [][]
+         var itemsElementType = MapParameterTypeToJsonSchemaType(elementType);
+         return new Dictionary<string, object>
+         {
+            ["type"] = "array",
+            ["items"] = new Dictionary<string, object>
+            {
+               ["type"] = itemsElementType
+            }
+         };
+      }
+
+      if (t.EndsWith("[]"))
+      {
+         // 1D array
+         var elementType = t[..^2]; // Remove []
+         return new Dictionary<string, object>
+         {
+            ["type"] = MapParameterTypeToJsonSchemaType(elementType)
+         };
+      }
+
+      return null;
    }
 
    private static object JsonRpcResult(object? id, object result) => new

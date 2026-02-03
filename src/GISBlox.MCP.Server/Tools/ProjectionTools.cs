@@ -46,7 +46,7 @@ internal class ProjectionTools
    [Description("Reprojects an array of WGS84 coordinates to an array of RDPoints (Amersfoort / EPSG:28992).")]
    public static async Task<List<RDPoint>> ToRDSFromCoordinateList(
       GISBloxClient gisbloxClient,
-      [ParamDesc("Array of WGS84 coordinates, where each element is [latitude, longitude].")]
+      [ParamDesc("Array of WGS84 coordinates, where each element is a [latitude, longitude] array.")]
       double[][] coordinates,
       CancellationToken cancellationToken = default)
    {
@@ -61,7 +61,7 @@ internal class ProjectionTools
    [Description("Reprojects an array of WGS84 coordinates to an array of Locations (WGS84 / RDNew). Includes the sources coordinates.")]
    public static async Task<List<Location>> ToRDSFromCoordinateListComplete(
       GISBloxClient gisbloxClient,
-      [ParamDesc("Array of WGS84 coordinates, where each element is [latitude, longitude].")]
+      [ParamDesc("Array of WGS84 coordinates, where each element is a [latitude, longitude] array.")]
       double[][] coordinates,
       CancellationToken cancellationToken = default)
    {
@@ -108,7 +108,7 @@ internal class ProjectionTools
    [Description("Reprojects an array of RDPoints (Amersfoort / EPSG:28992) to an array of Coordinates (WGS84). Optionally rounds the results to the specified number of decimals (default -1, no rounding).")]
    public static async Task<List<Coordinate>> ToWGS84FromRDPointList(
       GISBloxClient gisbloxClient,
-      [ParamDesc("Array of RD (Rijksdriehoek) points, where each element is [x, y].")]
+      [ParamDesc("Array of RD (Rijksdriehoek) points, where each element is a [x, y] array.")]
       int[][] points,
       [ParamDesc("Number of decimal places to round to. Use -1 for no rounding.")]
       int decimals = -1,
@@ -125,7 +125,7 @@ internal class ProjectionTools
    [Description("Reprojects an array of RDPoints (Amersfoort / EPSG:28992) to an array of Locations (WGS84 / RDNew). Includes the sources RDPoints. Optionally rounds the results to the specified number of decimals (default -1, no rounding).")]
    public static async Task<List<Location>> ToWGS84FromRDPointListComplete(
       GISBloxClient gisbloxClient,
-      [ParamDesc("Array of RD (Rijksdriehoek) points, where each element is [x, y].")]
+      [ParamDesc("Array of RD (Rijksdriehoek) points, where each element is a [x, y] array.")]
       int[][] points,
       [ParamDesc("Number of decimal places to round to. Use -1 for no rounding.")]
       int decimals = -1,

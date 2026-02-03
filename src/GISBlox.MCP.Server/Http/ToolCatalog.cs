@@ -230,6 +230,15 @@ internal static partial class McpRestEndpointsExtensions
          var underlying = Nullable.GetUnderlyingType(t);
          if (underlying is not null) return $"{ToFriendlyTypeName(underlying)}?";
 
+         // Handle arrays
+         if (t.IsArray)
+         {
+            var elementType = t.GetElementType();
+            var rank = t.GetArrayRank();
+            var brackets = rank == 1 ? "[]" : string.Concat(Enumerable.Repeat("[]", rank));
+            return $"{ToFriendlyTypeName(elementType!)}{brackets}";
+         }
+
          if (t.IsGenericType)
          {
             var name = t.Name;
