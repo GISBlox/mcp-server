@@ -20,7 +20,7 @@
     <Company>Bartels Online</Company>
     <Authors>Karlo Bartels</Authors>
     <PackageProjectUrl>https://github.com/GISBlox/mcp-server</PackageProjectUrl>
-    <Version>1.0.7</Version>
+    <Version>1.0.8</Version>
   </PropertyGroup>
 
   <!-- Include additional files for browsing the MCP server. -->
