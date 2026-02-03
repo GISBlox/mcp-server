@@ -2,6 +2,7 @@
 // Copyright(c) Bartels Online. All rights reserved.
 // ----------------------------------------------------
 
+using GISBlox.MCP.Server.Attributes;
 using GISBlox.Services.SDK;
 using GISBlox.Services.SDK.Models;
 using ModelContextProtocol.Server;
@@ -15,7 +16,9 @@ internal class MapAnalyticsTools
 {
    [McpServerTool(Name = "MapsList")]
    [Description("Returns a list of maps that are tracked for a customer.")]
-   public static async Task<List<CustomerMap>> ListTrackedMaps(GISBloxClient gisbloxClient, CancellationToken cancellationToken = default)
+   public static async Task<List<CustomerMap>> ListTrackedMaps(
+      GISBloxClient gisbloxClient,
+      CancellationToken cancellationToken = default)
    {
       var result = await gisbloxClient.MapAnalytics.ListTrackedMaps(cancellationToken);
       return result.Maps;
@@ -23,21 +26,43 @@ internal class MapAnalyticsTools
 
    [McpServerTool(Name = "MapsKpisListAll")]
    [Description("Gets the KPIs for all maps within a date range of 7, 14, 21 or 31 days.")]
-   public static async Task<MapKpiRecord> GetMapsKpis(GISBloxClient gisbloxClient, int dateRange = (int)AnalyticsDateRangeEnum.OneWeek, string? endDate = null, CancellationToken cancellationToken = default)
+   public static async Task<MapKpiRecord> GetMapsKpis(
+      GISBloxClient gisbloxClient,
+      [ParamDesc("Date range in days: 7 (OneWeek), 14 (TwoWeeks), 21 (ThreeWeeks), or 31 (OneMonth).")]
+      int dateRange = (int)AnalyticsDateRangeEnum.OneWeek,
+      [ParamDesc("Optional end date in ISO 8601 format (e.g., '2026-01-15'). If not specified, the end date will be set to yesterday.")]
+      string? endDate = null,
+      CancellationToken cancellationToken = default)
    {  
       return await gisbloxClient.MapAnalytics.GetMapsKpis((AnalyticsDateRangeEnum)dateRange, ParseDate(endDate), cancellationToken);
    }
 
    [McpServerTool(Name = "MapKpisGet")]
    [Description("Gets the KPIs for a specific map within a date range of 7, 14, 21 or 31 days.")]
-   public static async Task<MapKpiRecord> GetMapKpis(GISBloxClient gisbloxClient, string mapId, int dateRange = (int)AnalyticsDateRangeEnum.OneWeek, string? endDate = null, CancellationToken cancellationToken = default)
+   public static async Task<MapKpiRecord> GetMapKpis(
+      GISBloxClient gisbloxClient,
+      [ParamDesc("The unique identifier of the map.")]
+      string mapId,
+      [ParamDesc("Date range in days: 7 (OneWeek), 14 (TwoWeeks), 21 (ThreeWeeks), or 31 (OneMonth).")]
+      int dateRange = (int)AnalyticsDateRangeEnum.OneWeek,
+      [ParamDesc("Optional end date in ISO 8601 format (e.g., '2024-01-15'). If not specified, the end date will be set to yesterday.")]
+      string? endDate = null,
+      CancellationToken cancellationToken = default)
    {  
       return await gisbloxClient.MapAnalytics.GetMapKpis(mapId, (AnalyticsDateRangeEnum)dateRange, ParseDate(endDate), cancellationToken);
    }
 
    [McpServerTool(Name = "MapEngagementGet")]
    [Description("Gets engagement metrics for a specific map within a date range of 7, 14, 21 or 31 days.")]
-   public static async Task<EngagementRecord> GetMapEngagement(GISBloxClient gisbloxClient, string mapId, int dateRange = (int)AnalyticsDateRangeEnum.OneWeek, string? endDate = null, CancellationToken cancellationToken = default)
+   public static async Task<EngagementRecord> GetMapEngagement(
+      GISBloxClient gisbloxClient,
+      [ParamDesc("The unique identifier of the map.")]
+      string mapId,
+      [ParamDesc("Date range in days: 7 (OneWeek), 14 (TwoWeeks), 21 (ThreeWeeks), or 31 (OneMonth).")]
+      int dateRange = (int)AnalyticsDateRangeEnum.OneWeek,
+      [ParamDesc("Optional end date in ISO 8601 format (e.g., '2024-01-15'). If not specified, the end date will be set to yesterday.")]
+      string? endDate = null,
+      CancellationToken cancellationToken = default)
    {
       return await gisbloxClient.MapAnalytics.GetMapEngagement(mapId, (AnalyticsDateRangeEnum)dateRange, ParseDate(endDate), cancellationToken);
    }

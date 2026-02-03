@@ -2,6 +2,7 @@
 // Copyright(c) Bartels Online. All rights reserved.
 // ----------------------------------------------------
 
+using GISBlox.MCP.Server.Attributes;
 using GISBlox.Services.SDK;
 using GISBlox.Services.SDK.Models;
 using ModelContextProtocol.Server;
@@ -25,7 +26,11 @@ internal class VisualizationTools
 
    [McpServerTool(Name = "PostalCodeVisualize")]
    [Description("Generates a geojson.io URL to visualize the geometry of a given postal code.")]
-   public static async Task<string> VisualizePostalCode(GISBloxClient gisbloxClient, string postalCode, CancellationToken cancellationToken = default)
+   public static async Task<string> VisualizePostalCode(
+      GISBloxClient gisbloxClient,
+      [ParamDesc("The Dutch postal code (4 digits like '1234' or 6 characters like '1234AB') to visualize.")]
+      string postalCode,
+      CancellationToken cancellationToken = default)
    {  
       string cleanId = SanitizePostalCodeId(postalCode, out bool isPostalCode4);
       string identifier = isPostalCode4 ? $"PC4_{cleanId}" : $"PC6_{cleanId}";
@@ -54,7 +59,11 @@ internal class VisualizationTools
 
    [McpServerTool(Name = "PostalCodeVisualizeNeighbours")]
    [Description("Generates a geojson.io URL to visualize the geometry of a given postal code and its neighbouring postal codes.")]
-   public static async Task<string> VisualizePostalCodeNeighbours(GISBloxClient gisbloxClient, string postalCode, CancellationToken cancellationToken = default)
+   public static async Task<string> VisualizePostalCodeNeighbours(
+      GISBloxClient gisbloxClient,
+      [ParamDesc("The Dutch postal code (4 digits like '1234' or 6 characters like '1234AB') to visualize with neighbours.")]
+      string postalCode,
+      CancellationToken cancellationToken = default)
    {
       string cleanId = SanitizePostalCodeId(postalCode, out bool isPostalCode4);
       string identifier = isPostalCode4 ? $"PC4N_{cleanId}" : $"PC6N_{cleanId}";
@@ -103,7 +112,11 @@ internal class VisualizationTools
 
    [McpServerTool(Name = "ZipchatQuery")]
    [Description("Ask ZipChat Copilot for information on the given postal code and have it generate code to retrieve postal code data in third-party applications.")]
-   public static string AskZipChatCopilot(string postalCodeId, bool showNeighbours = false)
+   public static string AskZipChatCopilot(
+      [ParamDesc("The Dutch postal code (4 digits like '1234' or 6 characters like '1234AB') to query.")]
+      string postalCodeId,
+      [ParamDesc("If true, includes neighbouring postal codes in the ZipChat query.")]
+      bool showNeighbours = false)
    {
       return $"{ZipChatCopilotUrlPrefix}{postalCodeId}&c=1&n={(showNeighbours ? "1" : "0")}";
    }

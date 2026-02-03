@@ -176,7 +176,14 @@ internal static partial class McpRestEndpointsExtensions
                      foreach (var p in d.Parameters)
                      {
                         var schemaType = MapParameterTypeToJsonSchemaType(p.Type);
-                        props[p.Name] = new { type = schemaType };
+                        var paramDef = new Dictionary<string, object> { ["type"] = schemaType };
+                        
+                        if (!string.IsNullOrWhiteSpace(p.Description))
+                        {
+                           paramDef["description"] = p.Description;
+                        }
+                        
+                        props[p.Name] = paramDef;
                         if (!p.IsOptional && !p.HasDefaultValue)
                         {
                            required.Add(p.Name);

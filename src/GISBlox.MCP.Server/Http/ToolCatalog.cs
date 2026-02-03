@@ -188,19 +188,24 @@ internal static partial class McpRestEndpointsExtensions
                   var toolAttr = mi.GetCustomAttribute<McpServerToolAttribute>(inherit: false);
                   if (toolAttr == null || string.IsNullOrWhiteSpace(toolAttr.Name))
                      continue; // Skip if no Name specified
-                  
+
                   var desc = mi.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>()?.Description;
                   var name = toolAttr.Name; // Use attribute Name as canonical
                   var fullName = $"{t.Name}.{name}";
-                  
+
                   var parameters = mi.GetParameters()
-                      .Select(p => new ToolParameterDto(
-                          Name: p.Name ?? "",
-                          Type: ToFriendlyTypeName(p.ParameterType),
-                          IsOptional: p.IsOptional || p.HasDefaultValue,
-                          HasDefaultValue: p.HasDefaultValue))
-                      .ToList()
-                      .AsReadOnly();
+                     .Select(p =>
+                     {
+                        var paramDesc = p.GetCustomAttribute<ParamDescAttribute>()?.Description;
+                        return new ToolParameterDto(
+                           Name: p.Name ?? "",
+                           Type: ToFriendlyTypeName(p.ParameterType),
+                           IsOptional: p.IsOptional || p.HasDefaultValue,
+                           HasDefaultValue: p.HasDefaultValue,
+                           Description: paramDesc);
+                     })
+                     .ToList()
+                     .AsReadOnly();
 
                   var dto = new ToolDescriptorDto(name, fullName, desc, parameters, category, tags);
                   methods.Add((t, mi, dto));
@@ -241,14 +246,14 @@ internal static partial class McpRestEndpointsExtensions
    #region DTOs    
 
    internal sealed record ToolDescriptorDto(
-      string Name, 
-      string FullName, 
-      string? Description, 
+      string Name,
+      string FullName,
+      string? Description,
       IReadOnlyList<ToolParameterDto> Parameters,
       string? Category,
       IReadOnlyList<string> Tags);
 
-   internal sealed record ToolParameterDto(string Name, string Type, bool IsOptional, bool HasDefaultValue);
+   internal sealed record ToolParameterDto(string Name, string Type, bool IsOptional, bool HasDefaultValue, string? Description = null);
 
    #endregion
 }
