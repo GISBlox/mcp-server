@@ -46,8 +46,8 @@ namespace GISBlox.MCP.Server.Tests
       [TestMethod]
       public async Task ReprojectToRDS()
       {
-         Coordinate coord = new(51.998929, 4.375587);
-         RDPoint rdPoint = await ProjectionTools.ToRDSFromCoordinate(_client, coord, CancellationToken.None);
+         double lat = 51.998929, lon = 4.375587;
+         RDPoint rdPoint = await ProjectionTools.ToRDSFromCoordinate(_client, lat, lon, CancellationToken.None);
 
          Assert.IsNotNull(rdPoint, "Response is empty.");
          Assert.IsTrue(rdPoint.X == 85530 && rdPoint.Y == 446100);
@@ -56,8 +56,8 @@ namespace GISBlox.MCP.Server.Tests
       [TestMethod]
       public async Task ReprojectToRDSComplete()
       {
-         Coordinate coord = new(51.998929, 4.375587);
-         Location location = await ProjectionTools.ToRDSFromCoordinateComplete(_client, coord, CancellationToken.None);
+         double lat = 51.998929, lon = 4.375587;
+         Location location = await ProjectionTools.ToRDSFromCoordinateComplete(_client, lat, lon, CancellationToken.None);
 
          Assert.IsNotNull(location, "Response is empty.");
          Assert.IsTrue(location.X == 85530 && location.Y == 446100 && location.Lat == 51.998929 && location.Lon == 4.375587);
@@ -68,11 +68,11 @@ namespace GISBlox.MCP.Server.Tests
       [TestMethod]
       public async Task ReprojectToRDSMultiple()
       {
-         List<Coordinate> coords =
+         double[][] coords =
          [
-            new Coordinate(51.998929, 4.375587),
-            new Coordinate(53.1, 4.2),
-            new Coordinate(53.11, 4.3)
+            [51.998929, 4.375587],
+            [53.1, 4.2],
+            [53.11, 4.3]
          ];
          List<RDPoint> rdPoints = await ProjectionTools.ToRDSFromCoordinateList(_client, coords, CancellationToken.None);
 
@@ -87,11 +87,11 @@ namespace GISBlox.MCP.Server.Tests
       [TestMethod]
       public async Task ReprojectToRDSMultipleComplete()
       {
-         List<Coordinate> coords =
+         double[][] coords =
          [
-            new Coordinate(51.998929, 4.375587),
-            new Coordinate(53.1, 4.2),
-            new Coordinate(53.11, 4.3)
+            [51.998929, 4.375587],
+            [53.1, 4.2],
+            [53.11, 4.3]
          ];
          List<Location> loc = await ProjectionTools.ToRDSFromCoordinateListComplete(_client, coords, CancellationToken.None);
 
@@ -110,8 +110,8 @@ namespace GISBlox.MCP.Server.Tests
       [TestMethod]
       public async Task ReprojectToWGS84()
       {
-         RDPoint rdPoint = new(85530, 446100);
-         Coordinate coord = await ProjectionTools.ToWGS84FromRDPoint(_client, rdPoint, 6, CancellationToken.None);        // Round the coordinate to 6 digits
+         int x = 85530, y = 446100;
+         Coordinate coord = await ProjectionTools.ToWGS84FromRDPoint(_client, x, y, 6, CancellationToken.None);        // Round the coordinate to 6 digits
 
          Assert.IsNotNull(coord, "Response is empty.");
          Assert.IsTrue(coord.Lat == 51.998927 && coord.Lon == 4.375584);
@@ -120,8 +120,8 @@ namespace GISBlox.MCP.Server.Tests
       [TestMethod]
       public async Task ReprojectToWGS84Complete()
       {
-         RDPoint rdPoint = new(85530, 446100);
-         Location location = await ProjectionTools.ToWGS84FromRDPointComplete(_client, rdPoint, -1, CancellationToken.None);  // No rounding
+         int x = 85530, y = 446100;
+         Location location = await ProjectionTools.ToWGS84FromRDPointComplete(_client, x, y, -1, CancellationToken.None);  // No rounding
 
          Assert.IsNotNull(location, "Response is empty.");
          Assert.IsTrue(location.Lat == 51.998927449317591 && location.Lon == 4.3755841993518345 && location.X == 85530 && location.Y == 446100);
@@ -132,13 +132,13 @@ namespace GISBlox.MCP.Server.Tests
       [TestMethod]
       public async Task ReprojectToWGS84Multiple()
       {
-         List<RDPoint> rdPoints =
+         int[][] points =
          [
-            new RDPoint(100000, 555000),
-            new RDPoint(1, 2),
-            new RDPoint(111000, 550000)
+            [100000, 555000],
+            [1, 2],
+            [111000, 550000]
          ];
-         List<Coordinate> coords = await ProjectionTools.ToWGS84FromRDPointList(_client, rdPoints, -1, CancellationToken.None);   // No rounding
+         List<Coordinate> coords = await ProjectionTools.ToWGS84FromRDPointList(_client, points, -1, CancellationToken.None);   // No rounding
 
          Assert.IsNotNull(coords.Count != 0, "Response is empty.");
          Assert.IsTrue(coords[0].Lat == 52.9791861737104 && coords[0].Lon == 4.56833613045079);
@@ -151,13 +151,13 @@ namespace GISBlox.MCP.Server.Tests
       [TestMethod]
       public async Task ReprojectToWGS84MultipleComplete()
       {
-         List<RDPoint> rdPoints =
+         int[][] points =
          [
-            new RDPoint(100000, 555000),
-            new RDPoint(1, 2),
-            new RDPoint(111000, 550000)
+            [100000, 555000],
+            [1, 2],
+            [111000, 550000]
          ];
-         List<Location> coords = await ProjectionTools.ToWGS84FromRDPointListComplete(_client, rdPoints, 5, CancellationToken.None);   // Round the coordinates to 5 digits
+         List<Location> coords = await ProjectionTools.ToWGS84FromRDPointListComplete(_client, points, 5, CancellationToken.None);   // Round the coordinates to 5 digits
 
          Assert.IsNotNull(coords.Count != 0, "Response is empty.");
          Assert.IsTrue(coords[0].Lat == 52.97919 && coords[0].Lon == 4.56834 && coords[0].X == 100000 && coords[0].Y == 555000);

@@ -22,4 +22,3 @@ internal class InfoTools
       return await gisbloxClient.Info.GetSubscriptions(cancellationToken);
    }
 }
-
