@@ -14,10 +14,11 @@ using System.ComponentModel;
 internal class InfoTools
 {
    [McpServerTool(Name = "SubscriptionsList")]
-   [Description("Returns the subscriptions of the authorized GISBlox user.")]
-   public static async Task<List<Subscription>> GetSubscriptions(GISBloxClient gisbloxClient, CancellationToken cancellationToken = default)
+   [Description("Returns the subscription(s) of the current user.")]
+   public static async Task<List<Subscription>> GetSubscriptions(
+      GISBloxClient gisbloxClient,
+      CancellationToken cancellationToken = default)
    {
       return await gisbloxClient.Info.GetSubscriptions(cancellationToken);
    }
 }
-
