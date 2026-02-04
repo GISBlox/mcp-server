@@ -81,9 +81,9 @@ internal class PostalCodeTools
       int wktEpsg = (int)CoordinateSystem.RDNew,
       [ParamDesc("The EPSG code of the target coordinate system. Currently supports EPSG codes 4326 and 28992 only.")]
       int targetEpsg = (int)CoordinateSystem.RDNew,
-      [ParamDesc("If true, returns 6-digit postal codes; if false, returns 4-digit postal codes")]
+      [ParamDesc("If true, returns 6-digit postal codes; if false, returns 4-digit postal codes.")]
       bool streetLevelPostCodes = false,
-      [ParamDesc("If true, includes WKT geometry strings in the response")]
+      [ParamDesc("If true, includes WKT geometry strings in the response.")]
       bool includeWktGeometries = false,
       CancellationToken cancellationToken = default)
    {
@@ -111,9 +111,9 @@ internal class PostalCodeTools
       int buurtId = -1,
       [ParamDesc("The EPSG code of the target coordinate system. Currently supports EPSG codes 4326 and 28992 only.")]
       int epsg = (int)CoordinateSystem.RDNew,
-      [ParamDesc("If true, returns 6-digit postal codes; if false, returns 4-digit postal codes")]
+      [ParamDesc("If true, returns 6-digit postal codes; if false, returns 4-digit postal codes.")]
       bool streetLevelPostCodes = false,
-      [ParamDesc("If true, includes WKT geometry strings in the response")]
+      [ParamDesc("If true, includes WKT geometry strings in the response.")]
       bool includeWktGeometries = false,
       CancellationToken cancellationToken = default)
    {
