@@ -2,6 +2,7 @@
 // Copyright(c) Bartels Online. All rights reserved.
 // ----------------------------------------------------
 
+using GISBlox.MCP.Server.Helpers;
 using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -127,7 +128,7 @@ internal static partial class McpRestEndpointsExtensions
                }
             case "tools/list":
                {
-                  var descriptors = ToolCatalog.GetDescriptors();
+                  var descriptors = McpToolCatalog.GetDescriptors();
 
                   var duplicates = descriptors
                       .GroupBy(d => d.Name, StringComparer.OrdinalIgnoreCase)
@@ -213,7 +214,8 @@ internal static partial class McpRestEndpointsExtensions
                      {
                         ["name"] = safe,
                         ["description"] = d.Description ?? string.Empty,
-                        ["inputSchema"] = inputSchema
+                        ["inputSchema"] = inputSchema,
+                        ["output"] = McpSchemaHelper.CreateStandardOutputSchema()
                      };
 
                      // Add category if available
@@ -276,7 +278,7 @@ internal static partial class McpRestEndpointsExtensions
                      Arguments = arguments
                   };
 
-                  var invokeResult = await ToolCatalog.InvokeAsync(invokeReq, sp, ct);
+                  var invokeResult = await McpToolCatalog.InvokeAsync(invokeReq, sp, ct);
 
                   var formatted = FormatToolResult(invokeResult);
                   return JsonRpcResult(id, new { content = formatted, isError = false });
@@ -322,7 +324,7 @@ internal static partial class McpRestEndpointsExtensions
       {
          if (_toolNameMap.Count != 0) return;
 
-         var descriptors = ToolCatalog.GetDescriptors();
+         var descriptors = McpToolCatalog.GetDescriptors();
          var seenSafe = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
          foreach (var d in descriptors)

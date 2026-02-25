@@ -11,7 +11,7 @@ namespace GISBlox.MCP.Server.Http;
 
 internal static partial class McpRestEndpointsExtensions
 {
-   private static class ToolCatalog
+   private static class McpToolCatalog
    {
       private static bool _initialized;
       private static readonly Lock _lock = new();
