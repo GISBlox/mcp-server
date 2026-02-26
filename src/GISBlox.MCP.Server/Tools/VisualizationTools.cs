@@ -157,29 +157,31 @@ internal class VisualizationTools
 
    private static async Task<string> WktToFeature(GISBloxClient gisbloxClient, PostalCode4 pc4, CancellationToken cancellationToken = default)
    {
-      string feature = await ConversionTools.ConvertToGeoJson(gisbloxClient, pc4.Location.Geometry.WKT, false, cancellationToken);
-      return AddFeatureProperties(feature, new Dictionary<string, string>
-      {
-         { "postcode", pc4.Id },
-         { "wijk(en)", pc4.Location.Wijken },
-         { "gemeente", pc4.Location.Gemeente },
-         { "omtrek", FormatDouble(pc4.Location.Geometry.PerimeterM) + " meter" },
-         { "oppervlakte", FormatDouble(pc4.Location.Geometry.AreaM2) + " m2" }
-      });
+      //string feature = await ConversionTools.ConvertToGeoJson(gisbloxClient, pc4.Location.Geometry.WKT, false, cancellationToken);
+      //return AddFeatureProperties(feature, new Dictionary<string, string>
+      //{
+      //   { "postcode", pc4.Id },
+      //   { "wijk(en)", pc4.Location.Wijken },
+      //   { "gemeente", pc4.Location.Gemeente },
+      //   { "omtrek", FormatDouble(pc4.Location.Geometry.PerimeterM) + " meter" },
+      //   { "oppervlakte", FormatDouble(pc4.Location.Geometry.AreaM2) + " m2" }
+      //});
+      return null;
    }
 
    private static async Task<string> WktToFeature(GISBloxClient gisbloxClient, PostalCode6 pc6, CancellationToken cancellationToken = default)
    {
-      string feature = await ConversionTools.ConvertToGeoJson(gisbloxClient, pc6.Location.Geometry.WKT, false, cancellationToken);
-      return AddFeatureProperties(feature, new Dictionary<string, string>
-      {
-         { "postcode", pc6.Id },
-         { "buurt", pc6.Location.Buurt },
-         { "wijk", pc6.Location.Wijk },
-         { "gemeente", pc6.Location.Gemeente },
-         { "omtrek", FormatDouble(pc6.Location.Geometry.PerimeterM) + " meter" },
-         { "oppervlakte", FormatDouble(pc6.Location.Geometry.AreaM2) + " m2" }
-      });
+      //string feature = await ConversionTools.ConvertToGeoJson(gisbloxClient, pc6.Location.Geometry.WKT, false, cancellationToken);
+      //return AddFeatureProperties(feature, new Dictionary<string, string>
+      //{
+      //   { "postcode", pc6.Id },
+      //   { "buurt", pc6.Location.Buurt },
+      //   { "wijk", pc6.Location.Wijk },
+      //   { "gemeente", pc6.Location.Gemeente },
+      //   { "omtrek", FormatDouble(pc6.Location.Geometry.PerimeterM) + " meter" },
+      //   { "oppervlakte", FormatDouble(pc6.Location.Geometry.AreaM2) + " m2" }
+      //});
+      return null;
    }
 
    private static string AddFeatureProperties(string geoJson, Dictionary<string, string> featureProperties)

@@ -13,13 +13,18 @@ namespace GISBlox.MCP.Server.ToolBase
    {
       protected abstract string ToolGroupName { get; }
 
-      public McpToolOutput ProcessResult(string toolName, object? result, object? metadata = null, string? notes = null, string ? summary = null)
+      public McpToolOutput ProcessResult(string toolName, object? result, object? parameters = null, object? metadata = null, string? notes = null, string ? summary = null)
       {
          ResultEnvelope<object?> envelope = new()
          {
             ToolName = $"{ToolGroupName}.{toolName}",
-            Summary = summary ?? $"{toolName} executed successfully.",
-            Metadata = metadata,
+            Status = $"{toolName} executed successfully.",
+            Summary = summary,
+            Metadata = new
+            {
+               Parameters = parameters,
+               Extra = metadata
+            },
             Data = result,
             Notes = notes
          };
@@ -36,27 +41,22 @@ namespace GISBlox.MCP.Server.ToolBase
 
       public McpToolOutput ProcessError(string toolName, Exception ex, object? metadata = null, string? notes = null)
       {
-         var errorData = (
-            Error: ex.Message,
-            Stack: ex.StackTrace
-         );
-
          ResultEnvelope<object?> envelope = new()
          {
             ToolName = $"{ToolGroupName}.{toolName}",
-            Summary = $"{toolName} failed with an exception.",
-
+            Status = $"{toolName} failed with an exception.",
+            Summary = $"### {ex.Message?.Replace("\\", "").Replace("\"", "")}",
             Metadata = metadata,
-            Data = errorData,
+            Data = ex.Message,
             Notes = notes ?? "An error occurred during tool execution."
          };
 
          return new McpToolOutput
          {
             Tool = envelope.ToolName,
-            Summary = envelope.Summary,
+            Summary = envelope.Status,
             Metadata = envelope.Metadata,
-            Data = errorData,
+            Data = envelope.Data,
             Markdown = BuildMarkdown(envelope)
          };
       }
@@ -74,19 +74,31 @@ namespace GISBlox.MCP.Server.ToolBase
             sb.AppendLine();
          }
 
-         sb.AppendLine($"**{env.Summary}**");
+         sb.AppendLine($"**{env.Status}**");
          sb.AppendLine();
+
+         if (env.Summary != null)
+         {
+            sb.AppendLine($"{env.Summary}");
+            sb.AppendLine();
+         }
+
          sb.AppendLine("---");
          sb.AppendLine();
 
          if (env.Metadata != null)
          {
-            sb.AppendLine("### Metadata");
-            sb.AppendLine();
-            sb.AppendLine(ObjectToMarkdownTable(env.Metadata));
-            sb.AppendLine();
-            sb.AppendLine("---");
-            sb.AppendLine();
+            dynamic metaDataObj = env.Metadata;
+            var extra = metaDataObj.Extra;
+            if (extra != null)
+            {
+               sb.AppendLine("### Metadata");
+               sb.AppendLine();
+               sb.AppendLine(ObjectToMarkdownTable(extra));
+               sb.AppendLine();
+               sb.AppendLine("---");
+               sb.AppendLine();
+            }
          }
 
          if (env.Data != null)
@@ -145,19 +157,52 @@ namespace GISBlox.MCP.Server.ToolBase
          sb.AppendLine("|-------|--------|");
 
          foreach (var prop in props)
-         {
+         {            
+            if (prop.GetIndexParameters().Length > 0)
+               continue;
+
             string name = prop.Name;
-            object? value = prop.GetValue(obj) ?? "";
+            object? rawValue = prop.GetValue(obj);
+            string value = FormatValue(rawValue);
+
             sb.AppendLine($"| {name} | {value} |");
          }
 
          return sb.ToString();
       }
-            
+
+      private static string FormatValue(object? value)
+      {
+         if (value == null)
+            return "_null_";
+                  
+         if (value is string str)
+            return str;
+
+         // Check if it's a collection
+         if (value is IEnumerable enumerable)
+         {
+            var items = enumerable.Cast<object>().ToList();
+            int count = items.Count;
+
+            if (count == 0)
+               return "_empty collection_";
+
+            // Show first few items with count
+            var preview = string.Join(", ", items.Take(3).Select(i => i?.ToString() ?? "null"));
+
+            if (count > 3)
+               return $"[{count} items: {preview}, ...]";
+            else
+               return $"[{count} items: {preview}]";
+         }
+         return value.ToString() ?? "";
+      }
+
       protected (string toolName, string description) GetCurrentToolMetadata(
           [System.Runtime.CompilerServices.CallerMemberName] string methodName = "")
       {
           return ToolAttributeHelper.GetToolMetadata(this.GetType(), methodName);
-      }
+      }    
    }
 }

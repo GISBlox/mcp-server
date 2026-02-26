@@ -26,11 +26,22 @@ internal class InfoTools : McpToolBase
       try
       {
          List<Subscription> result = await gisbloxClient.Info.GetSubscriptions(cancellationToken);
-         return ProcessResult(toolName, result, null, description);         
+
+         string summary = BuildSummary(result);
+         return ProcessResult(toolName, result, null, null, description, summary);         
       }
       catch (Exception ex)
       {
          return ProcessError(toolName, ex);
       }
    }
+
+   #region Internal helpers
+
+   private static string BuildSummary(List<Subscription> result)
+   {
+      return $"I found **{result?.Count ?? 0}** subscription(s) for this user.";
+   }
+
+   #endregion
 }

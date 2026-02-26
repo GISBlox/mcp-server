@@ -2,6 +2,7 @@
 // Copyright(c) Bartels Online. All rights reserved.
 // ----------------------------------------------------
 
+using GISBlox.MCP.Server.ToolBase;
 using GISBlox.Services.SDK;
 using GISBlox.Services.SDK.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -16,6 +17,7 @@ namespace GISBlox.MCP.Server.Tests
    public class InfoToolsTests
    {
       private GISBloxClient _client = null!;
+      private InfoTools _infoTools = null!;
 
       #region Initialization and cleanup
 
@@ -26,6 +28,7 @@ namespace GISBlox.MCP.Server.Tests
          var serviceUrl = Environment.GetEnvironmentVariable("GISBLOX_SERVICE_URL") ?? "https://services.gisblox.com";
 
          _client = GISBloxClient.CreateClient(serviceUrl, serviceKey, applicationName: "GISBlox.MCP.Server.Tests");
+         _infoTools = new InfoTools();
       }
 
       [TestCleanup]
@@ -42,9 +45,13 @@ namespace GISBlox.MCP.Server.Tests
       [TestMethod]
       public async Task GetSubscriptionInfo()
       {
-         List<Subscription> subscriptions = await InfoTools.GetSubscriptions(_client, CancellationToken.None);
+         McpToolOutput result = await _infoTools.GetSubscriptions(_client, CancellationToken.None);
+         
+         Assert.IsNotNull(result);
 
-         subscriptions.ForEach(sub =>
+         var subscriptions = result.Data as List<Subscription>;
+
+         subscriptions?.ForEach(sub =>
              Console.WriteLine($"\r\nName: {sub.Name} \r\nDescription: {sub.Description} \r\nRegistration date: {sub.RegisterDate} Expiration date: {sub.ExpirationDate} Expired: {sub.Expired}"));
 
          Assert.IsNotNull(subscriptions, "Response is null.");

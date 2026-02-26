@@ -2,7 +2,9 @@
 // Copyright(c) Bartels Online. All rights reserved.
 // ----------------------------------------------------
 
+using GISBlox.MCP.Server.ToolBase;
 using GISBlox.Services.SDK;
+using GISBlox.Services.SDK.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -18,6 +20,7 @@ namespace GISBlox.MCP.Server.Tests
    public class ConversionToolsTests
    {
       private GISBloxClient _client = null!;
+      private ConversionTools _conversionTools = null!;
 
       private static readonly byte[] WKB_POINT_30_10_5_BYTES = [1, 233, 3, 0, 0, 0, 0, 0, 0, 0, 0, 62, 64, 0, 0, 0, 0, 0, 0, 36, 64, 0, 0, 0, 0, 0, 0, 20, 64];
 
@@ -30,6 +33,7 @@ namespace GISBlox.MCP.Server.Tests
          var serviceUrl = Environment.GetEnvironmentVariable("GISBLOX_SERVICE_URL") ?? "https://services.gisblox.com";
 
          _client = GISBloxClient.CreateClient(serviceUrl, serviceKey, applicationName: "GISBlox.MCP.Server.Tests");
+         _conversionTools = new ConversionTools();
       }
 
       [TestCleanup]
@@ -48,9 +52,12 @@ namespace GISBlox.MCP.Server.Tests
       [TestMethod]
       public async Task WktToGeoJson_ConvertMultiPolygon()
       {
-         string wkt = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)),((15 5, 40 10, 10 20, 5 10, 15 5)))";
-         string geoJson = await ConversionTools.ConvertToGeoJson(_client, wkt, true, CancellationToken.None);
+         string wkt = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)),((15 5, 40 10, 10 20, 5 10, 15 5)))";         
+         McpToolOutput result = await _conversionTools.ConvertToGeoJson(_client, wkt, true, CancellationToken.None);
+         
+         Assert.IsNotNull(result);
 
+         var geoJson = result.Data as string;
          Assert.IsNotNull(geoJson, "Response is empty.");
          Assert.IsTrue(IsValidGeoJson(geoJson), "Invalid GeoJSON.");
       }
@@ -59,8 +66,11 @@ namespace GISBlox.MCP.Server.Tests
       public async Task WktToGeoJson_ConvertMultiPolygonWithInnerRing()
       {
          string wkt = "MULTIPOLYGON (((40 40, 20 45, 45 30, 40 40)),((20 35, 10 30, 10 10, 30 5, 45 20, 20 35),(30 20, 20 15, 20 25, 30 20)))";
-         string geoJson = await ConversionTools.ConvertToGeoJson(_client, wkt, false, CancellationToken.None);
+         McpToolOutput result = await _conversionTools.ConvertToGeoJson(_client, wkt, false, CancellationToken.None);
 
+         Assert.IsNotNull(result);
+
+         var geoJson = result.Data as string;
          Assert.IsNotNull(geoJson, "Response is empty.");
          Assert.IsTrue(IsValidGeoJson(geoJson), "Invalid GeoJSON.");
       }
@@ -74,7 +84,10 @@ namespace GISBlox.MCP.Server.Tests
       {
          string geoJson = "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[30,10,5]},\"properties\":{\"zValue\":23,\"name\":\"Single Point\"}}";
 
-         var wktList = await ConversionTools.ConvertToWkt(_client, geoJson, CancellationToken.None);
+         McpToolOutput result = await _conversionTools.ConvertToWkt(_client, geoJson, CancellationToken.None);
+         Assert.IsNotNull(result);
+
+         List<WKT>? wktList = result.Data as List<WKT>;
 
          Assert.IsNotNull(wktList, "Returned WKT list is null.");
          Assert.IsGreaterThan(0, wktList.Count, "Returned WKT list is empty.");
@@ -82,7 +95,7 @@ namespace GISBlox.MCP.Server.Tests
 
          var wkt = wktList.FirstOrDefault();
          Assert.IsNotNull(wkt, "Returned WKT object is null.");
-         Assert.AreEqual("POINT Z (30 10 5)", wkt.Geometry);
+         Assert.AreEqual("POINT Z (30 10 5)", wkt!.Geometry);
 
          Assert.IsNotNull(wkt.Properties, "WKT properties are null.");
          Assert.IsGreaterThan(0, wkt.Properties.Count, "WKT properties are empty.");
@@ -101,14 +114,17 @@ namespace GISBlox.MCP.Server.Tests
          {
             await File.WriteAllTextAsync(localPath, geoJson, CancellationToken.None);
 
-            var wktList = await ConversionTools.ConvertToWktFromFile(_client, localPath, CancellationToken.None);
+            McpToolOutput result = await _conversionTools.ConvertToWktFromFile(_client, localPath, CancellationToken.None);
+            Assert.IsNotNull(result);
+
+            List<WKT>? wktList = result.Data as List<WKT>;
 
             Assert.IsNotNull(wktList, "Returned WKT list is null.");
             Assert.IsGreaterThan(0, wktList.Count, "Returned WKT list is empty.");
 
             var wkt = wktList.FirstOrDefault();
             Assert.IsNotNull(wkt, "Returned WKT object is null.");
-            Assert.AreEqual("POINT Z (30 10 5)", wkt.Geometry);
+            Assert.AreEqual("POINT Z (30 10 5)", wkt!.Geometry);
 
             Assert.IsNotNull(wkt.Properties, "WKT properties are null.");
             Assert.IsGreaterThan(0, wkt.Properties.Count, "WKT properties are empty.");
@@ -134,14 +150,17 @@ namespace GISBlox.MCP.Server.Tests
       {
          string geoJson = "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[30,10,5]},\"properties\":{\"zValue\":23,\"name\":\"Single Point\"}}";
 
-         var wkbList = await ConversionTools.ConvertToWkb(_client, geoJson, CancellationToken.None);
+         McpToolOutput result = await _conversionTools.ConvertToWkb(_client, geoJson, CancellationToken.None);
+         Assert.IsNotNull(result);
+
+         List<WKB>? wkbList = result.Data as List<WKB>;
 
          Assert.IsNotNull(wkbList, "Returned WKB list is null.");
          Assert.IsGreaterThan(0, wkbList.Count, "Returned WKB list is empty.");
 
          var wkb = wkbList.FirstOrDefault();
          Assert.IsNotNull(wkb, "Returned WKB object is null.");
-         Assert.IsNotNull(wkb.Geometry, "WKB geometry is null.");
+         Assert.IsNotNull(wkb!.Geometry, "WKB geometry is null.");
          Assert.IsGreaterThan(0, wkb.Geometry.Length, "WKB geometry is empty.");
          CollectionAssert.AreEqual(WKB_POINT_30_10_5_BYTES, wkb.Geometry, "WKB geometry does not match expected value.");
 
@@ -161,14 +180,17 @@ namespace GISBlox.MCP.Server.Tests
          {
             await File.WriteAllTextAsync(localPath, geoJson, CancellationToken.None);
 
-            var wkbList = await ConversionTools.ConvertToWkbFromFile(_client, localPath, CancellationToken.None);
+            McpToolOutput result = await _conversionTools.ConvertToWkbFromFile(_client, localPath, CancellationToken.None);
+            Assert.IsNotNull(result);
+
+            List<WKB>? wkbList = result.Data as List<WKB>;
 
             Assert.IsNotNull(wkbList, "Returned WKB list is null.");
             Assert.IsGreaterThan(0, wkbList.Count, "Returned WKB list is empty.");
 
             var wkb = wkbList.FirstOrDefault();
             Assert.IsNotNull(wkb, "Returned WKB object is null.");
-            Assert.IsNotNull(wkb.Geometry, "WKB geometry is null.");
+            Assert.IsNotNull(wkb!.Geometry, "WKB geometry is null.");
             Assert.IsGreaterThan(0, wkb.Geometry.Length, "WKB geometry is empty.");
 
             CollectionAssert.AreEqual(WKB_POINT_30_10_5_BYTES, wkb.Geometry, "WKB geometry does not match expected value.");

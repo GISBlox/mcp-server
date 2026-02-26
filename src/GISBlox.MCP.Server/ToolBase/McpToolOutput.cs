@@ -18,7 +18,7 @@ namespace GISBlox.MCP.Server.ToolBase
       /// Human-readable summary of what happened.
       /// </summary>
       [JsonPropertyOrder(1)]
-      public string Summary { get; set; } = "";
+      public string? Summary { get; set; } = "";
 
       /// <summary>
       /// Execution metadata (count, duration, etc.) or any other relevant information about the execution context.

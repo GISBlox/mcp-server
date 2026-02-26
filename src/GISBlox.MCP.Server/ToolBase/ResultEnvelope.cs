@@ -14,8 +14,13 @@ namespace GISBlox.MCP.Server.ToolBase
       /// <summary>
       /// Human-readable summary of what happened.
       /// </summary>
-      public string Summary { get; set; } = "";
-      
+      public string? Summary { get; set; } = "";
+
+      /// <summary>
+      /// The status of the result (e.g., "Success", "Error", "Warning").
+      /// </summary>
+      public string Status { get; set; } = "";
+
       /// <summary>
       /// Additional metadata related to the result.
       /// </summary>

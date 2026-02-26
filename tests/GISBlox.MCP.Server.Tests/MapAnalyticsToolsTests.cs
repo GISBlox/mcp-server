@@ -2,10 +2,12 @@
 // Copyright(c) Bartels Online. All rights reserved.
 // ----------------------------------------------------
 
+using GISBlox.MCP.Server.ToolBase;
 using GISBlox.Services.SDK;
 using GISBlox.Services.SDK.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,6 +18,7 @@ namespace GISBlox.MCP.Server.Tests
    public class MapAnalyticsToolsTests
    {
       private GISBloxClient _client = null!;
+      private MapAnalyticsTools _mapAnalyticsTools = null!;
 
       const int API_QUOTA_DELAY = 1000;  // Allows to run all tests together without exceeding API call quota
 
@@ -28,6 +31,7 @@ namespace GISBlox.MCP.Server.Tests
          var serviceUrl = Environment.GetEnvironmentVariable("GISBLOX_SERVICE_URL") ?? "https://services.gisblox.com";
 
          _client = GISBloxClient.CreateClient(serviceUrl, serviceKey, applicationName: "GISBlox.MCP.Server.Tests");
+         _mapAnalyticsTools = new MapAnalyticsTools();
       }
 
       [TestCleanup]
@@ -44,7 +48,11 @@ namespace GISBlox.MCP.Server.Tests
       [TestMethod]
       public async Task ListTrackedMaps()
       {
-         var maps = await MapAnalyticsTools.ListTrackedMaps(_client, CancellationToken.None);
+         McpToolOutput result = await _mapAnalyticsTools.ListTrackedMaps(_client, CancellationToken.None);
+
+         Assert.IsNotNull(result);
+
+         var maps = result.Data as List<CustomerMap>;
 
          Assert.IsNotNull(maps);
       }
@@ -55,8 +63,10 @@ namespace GISBlox.MCP.Server.Tests
          DateTime endDate = DateTime.Parse("2025-11-21");
          AnalyticsDateRangeEnum dateRange = AnalyticsDateRangeEnum.TwoWeeks;
 
-         var kpis = await MapAnalyticsTools.GetMapsKpis(_client, (int)dateRange, endDate.ToString("yyyy-MM-dd"), CancellationToken.None);
+         McpToolOutput result = await _mapAnalyticsTools.GetMapsKpis(_client, (int)dateRange, endDate.ToString("yyyy-MM-dd"), CancellationToken.None);
+         Assert.IsNotNull(result);
 
+         MapKpiRecord? kpis = result.Data as MapKpiRecord;
          Assert.IsNotNull(kpis);
          
          Assert.AreEqual(dateRange.ToString(), kpis.DateRange);
@@ -81,9 +91,12 @@ namespace GISBlox.MCP.Server.Tests
          string mapId = "7D6C2135-C878-4945-8622-60D3FE9B4BC3";
          AnalyticsDateRangeEnum dateRange = AnalyticsDateRangeEnum.TwoWeeks;
 
-         var kpis = await MapAnalyticsTools.GetMapKpis(_client, mapId, (int)dateRange, endDate.ToString("yyyy-MM-dd"), CancellationToken.None);
+         McpToolOutput result = await _mapAnalyticsTools.GetMapKpis(_client, mapId, (int)dateRange, endDate.ToString("yyyy-MM-dd"), CancellationToken.None);
+         Assert.IsNotNull(result);
 
+         MapKpiRecord? kpis = result.Data as MapKpiRecord;
          Assert.IsNotNull(kpis);
+
          Assert.AreEqual(dateRange.ToString(), kpis.DateRange);
          Assert.AreEqual(endDate.Add(new TimeSpan(23, 59, 59)), kpis.EndDate);
          Assert.AreEqual(endDate.AddDays(-(int)dateRange + 1), kpis.StartDate);
@@ -106,8 +119,10 @@ namespace GISBlox.MCP.Server.Tests
          string mapId = "7D6C2135-C878-4945-8622-60D3FE9B4BC3";
          AnalyticsDateRangeEnum dateRange = AnalyticsDateRangeEnum.ThreeWeeks;
 
-         var record = await MapAnalyticsTools.GetMapEngagement(_client, mapId, (int)dateRange, endDate.ToString("yyyy-MM-dd"), CancellationToken.None);
+         McpToolOutput result = await _mapAnalyticsTools.GetMapEngagement(_client, mapId, (int)dateRange, endDate.ToString("yyyy-MM-dd"), CancellationToken.None);
+         Assert.IsNotNull(result);
 
+         EngagementRecord? record = result.Data as EngagementRecord;
          Assert.IsNotNull(record, "Response is empty.");
 
          Assert.AreEqual(mapId, record.MapId);
