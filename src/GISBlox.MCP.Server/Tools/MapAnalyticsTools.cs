@@ -51,11 +51,11 @@ internal class MapAnalyticsTools : McpToolBase
    {
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { dateRange, endDate });
-      
+
       try
       {
          MapKpiRecord result = await gisbloxClient.MapAnalytics.GetMapsKpis((AnalyticsDateRangeEnum)dateRange, ParseDate(endDate), cancellationToken);
-         
+
          string summary = BuildKpiResultSummary(result);
          return ProcessResult(toolName, result, parameters, null, description, summary);
       }
@@ -79,11 +79,11 @@ internal class MapAnalyticsTools : McpToolBase
    {
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { mapId, dateRange, endDate });
-      
+
       try
       {
          MapKpiRecord result = await gisbloxClient.MapAnalytics.GetMapKpis(mapId, (AnalyticsDateRangeEnum)dateRange, ParseDate(endDate), cancellationToken);
-         
+
          string summary = BuildKpiResultSummary(result);
          return ProcessResult(toolName, result, parameters, null, description, summary);
       }
@@ -96,18 +96,18 @@ internal class MapAnalyticsTools : McpToolBase
    [McpServerTool(Name = "MapEngagementGet")]
    [Description("Gets engagement metrics for a specific map within a date range of 7, 14, 21 or 31 days.")]
    public async Task<McpToolOutput> GetMapEngagement(
-   GISBloxClient gisbloxClient,
-   [ParamDesc("The unique identifier of the map.")]
+      GISBloxClient gisbloxClient,
+      [ParamDesc("The unique identifier of the map.")]
       string mapId,
-   [ParamDesc("Date range in days: 7 (OneWeek), 14 (TwoWeeks), 21 (ThreeWeeks), or 31 (OneMonth).")]
+      [ParamDesc("Date range in days: 7 (OneWeek), 14 (TwoWeeks), 21 (ThreeWeeks), or 31 (OneMonth).")]
       int dateRange = (int)AnalyticsDateRangeEnum.OneWeek,
-   [ParamDesc("Optional end date in ISO 8601 format (e.g., '2024-01-15'). If not specified, the end date will be set to yesterday.")]
+      [ParamDesc("Optional end date in ISO 8601 format (e.g., '2024-01-15'). If not specified, the end date will be set to yesterday.")]
       string? endDate = null,
-   CancellationToken cancellationToken = default)
+      CancellationToken cancellationToken = default)
    {
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { mapId, dateRange, endDate });
-      
+
       try
       {
          EngagementRecord result = await gisbloxClient.MapAnalytics.GetMapEngagement(mapId, (AnalyticsDateRangeEnum)dateRange, ParseDate(endDate), cancellationToken);
@@ -144,7 +144,7 @@ internal class MapAnalyticsTools : McpToolBase
    }
 
    private static string BuildKpiResultSummary(MapKpiRecord kpiRecord)
-   {  
+   {
       StringBuilder sb = new();
       if (kpiRecord != null && kpiRecord.MapKpis != null)
       {
@@ -161,14 +161,14 @@ internal class MapAnalyticsTools : McpToolBase
       StringBuilder sb = new();
       if (engagementRecord != null && engagementRecord.Engagements != null)
       {
-         sb.AppendLine($"I found the following engagement metrics for map '{engagementRecord.MapName}':");         
+         sb.AppendLine($"I found the following engagement metrics for map '{engagementRecord.MapName}':");
          sb.AppendLine("- Interactions");
          sb.AppendLine("- MarkerClickCount");
          sb.AppendLine("- PanCount");
          sb.AppendLine("- ViewDuration");
          sb.AppendLine("- Views");
          sb.AppendLine("- ZoomCount");
-      }      
+      }
       return sb.ToString();
    }
 

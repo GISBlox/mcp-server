@@ -9,10 +9,28 @@ using System.Text;
 
 namespace GISBlox.MCP.Server.ToolBase
 {
+   /// <summary>
+   /// Abstract class that serves as a base for all MCP tools, 
+   /// providing common functionality for processing tool results and errors, 
+   /// and generating structured markdown output for display in the MCP interface.
+   /// </summary>
    public abstract class McpToolBase
    {
+      /// <summary>
+      /// The name of the tool group/category that this tool belongs to.
+      /// </summary>
       protected abstract string ToolGroupName { get; }
 
+      /// <summary>
+      /// Processes the result of a tool execution and returns an output object containing the tool's name, status, metadata, and formatted markdown.
+      /// </summary>
+      /// <param name="toolName">The name of the tool being processed. Used to identify the specific execution context.</param>
+      /// <param name="result">The result of the tool execution. This can be any object representing the output data produced by the tool.</param>
+      /// <param name="parameters">Optional parameters used during the tool execution.</param>
+      /// <param name="metadata">Optional additional metadata related to the tool execution.</param>      
+      /// <param name="notes">Optional notes to include in the output. Can be used to provide further insights or comments about the tool execution.</param>
+      /// <param name="summary">Optional summary information describing the outcome of the tool execution. Included in the output for quick reference.</param>
+      /// <returns>A McpToolOutput object containing the tool's name, summary, metadata, result data, and a formatted markdown representation of the execution.</returns>
       public McpToolOutput ProcessResult(string toolName, object? result, object? parameters = null, object? metadata = null, string? notes = null, string ? summary = null)
       {
          ResultEnvelope<object?> envelope = new()
@@ -39,6 +57,14 @@ namespace GISBlox.MCP.Server.ToolBase
          };
       }
 
+      /// <summary>
+      /// Processes an exception that occurs during tool execution and returns a structured output containing error details for diagnostic purposes.
+      /// </summary>      
+      /// <param name="toolName">The name of the tool that encountered the error. Used to identify the source of the failure in the output.</param>
+      /// <param name="ex">The exception that was thrown during the tool's execution. Provides details about the error that occurred.</param>
+      /// <param name="metadata">Optional additional metadata related to the error.</param>
+      /// <param name="notes">Optional notes to include in the error output. Can provide further insights or comments regarding the error.</param>
+      /// <returns>A McpToolOutput instance containing the tool name, error status, metadata, error message, and a formatted markdown representation of the error.</returns>
       public McpToolOutput ProcessError(string toolName, Exception ex, object? metadata = null, string? notes = null)
       {
          ResultEnvelope<object?> envelope = new()
@@ -199,6 +225,11 @@ namespace GISBlox.MCP.Server.ToolBase
          return value.ToString() ?? "";
       }
 
+      /// <summary>
+      /// Extracts the tool name and description from the ToolAttribute applied to the method that calls this function.
+      /// </summary>
+      /// <param name="methodName">The name of the method that calls this function.</param>
+      /// <returns>A tuple containing the tool name and description.</returns>
       protected (string toolName, string description) GetCurrentToolMetadata(
           [System.Runtime.CompilerServices.CallerMemberName] string methodName = "")
       {

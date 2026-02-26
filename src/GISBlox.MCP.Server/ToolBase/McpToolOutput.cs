@@ -6,6 +6,9 @@ using System.Text.Json.Serialization;
 
 namespace GISBlox.MCP.Server.ToolBase
 {
+   /// <summary>
+   /// Represents the output of an MCP tool execution, including the tool's name, summary, metadata, data, and a formatted markdown representation.
+   /// </summary>
    public class McpToolOutput
    {
       /// <summary>
