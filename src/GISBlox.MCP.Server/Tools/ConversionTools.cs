@@ -28,18 +28,9 @@ internal class ConversionTools : McpToolBase
    {
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { asFeatureCollection });
-      try
-      {
-         WKT wktObj = new(wkt);
-         string result = await gisbloxClient.Conversion.ToGeoJson(wktObj, asFeatureCollection, cancellationToken);
 
-         string summary = BuildGeoJsonConversionSummary(result?.Length ?? 0, wkt?.Length ?? 0);
-         return ProcessResult(toolName, result, parameters, null, description, summary);
-      }
-      catch (Exception ex)
-      {
-         return ProcessError(toolName, ex);
-      }
+      return await ExecuteToolAsync(ct => gisbloxClient.Conversion.ToGeoJson((WKT)new(wkt), asFeatureCollection, ct),
+         parameters, toolName, description, result => BuildGeoJsonConversionSummary(result?.Length ?? 0, wkt?.Length ?? 0), cancellationToken);
    }
 
    [McpServerTool(Name = "GeoJsonToWkt")]
@@ -51,17 +42,9 @@ internal class ConversionTools : McpToolBase
       CancellationToken cancellationToken = default)
    {
       var (toolName, description) = GetCurrentToolMetadata();
-      try
-      {
-         List<WKT> result = await gisbloxClient.Conversion.ToWkt(geoJson, cancellationToken);
 
-         string summary = BuildWktConversionSummary(result, geoJson?.Length ?? 0);
-         return ProcessResult(toolName, result, null, null, description, summary);
-      }
-      catch (Exception ex)
-      {
-         return ProcessError(toolName, ex);
-      }
+      return await ExecuteToolAsync(ct => gisbloxClient.Conversion.ToWkt(geoJson, ct),
+         null, toolName, description, result => BuildWktConversionSummary(result, geoJson?.Length ?? 0), cancellationToken);
    }
 
    [McpServerTool(Name = "GeoJsonFileToWkt")]
@@ -74,19 +57,15 @@ internal class ConversionTools : McpToolBase
    {
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { localPath });
-      try
-      {
-         string fileName = Path.GetFileName(localPath);
-         using var stream = new FileStream(localPath, FileMode.Open, FileAccess.Read);
-         List<WKT> result = await gisbloxClient.Conversion.ToWkt(stream, fileName, cancellationToken);
 
-         string summary = BuildWktConversionSummary(result);
-         return ProcessResult(toolName, result, parameters, null, description, summary);
-      }
-      catch (Exception ex)
-      {
-         return ProcessError(toolName, ex);
-      }
+      return await ExecuteToolAsync(
+         async ct =>
+         {
+            string fileName = Path.GetFileName(localPath);
+            using var stream = new FileStream(localPath, FileMode.Open, FileAccess.Read);
+            return await gisbloxClient.Conversion.ToWkt(stream, fileName, ct);
+         },
+         parameters, toolName, description, result => BuildWktConversionSummary(result), cancellationToken);
    }
 
    [McpServerTool(Name = "GeoJsonToWkb")]
@@ -98,17 +77,9 @@ internal class ConversionTools : McpToolBase
       CancellationToken cancellationToken = default)
    {
       var (toolName, description) = GetCurrentToolMetadata();
-      try
-      {
-         List<WKB> result = await gisbloxClient.Conversion.ToWkb(geoJson, cancellationToken);
 
-         string summary = BuildWkbConversionSummary(result, geoJson?.Length ?? 0);
-         return ProcessResult(toolName, result, null, null, description, summary);
-      }
-      catch (Exception ex)
-      {
-         return ProcessError(toolName, ex);
-      }
+      return await ExecuteToolAsync(ct => gisbloxClient.Conversion.ToWkb(geoJson, ct),
+         null, toolName, description, result => BuildWkbConversionSummary(result, geoJson?.Length ?? 0), cancellationToken);
    }
 
    [McpServerTool(Name = "GeoJsonFileToWkb")]
@@ -121,36 +92,32 @@ internal class ConversionTools : McpToolBase
    {
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { localPath });
-      try
-      {
-         string fileName = Path.GetFileName(localPath);
-         using var stream = new FileStream(localPath, FileMode.Open, FileAccess.Read);
-         List<WKB> result = await gisbloxClient.Conversion.ToWkb(stream, fileName, cancellationToken);
 
-         string summary = BuildWkbConversionSummary(result);
-         return ProcessResult(toolName, result, parameters, null, description, summary);
-      }
-      catch (Exception ex)
-      {
-         return ProcessError(toolName, ex);
-      }
+      return await ExecuteToolAsync(
+         async ct =>
+         {
+            string fileName = Path.GetFileName(localPath);
+            using var stream = new FileStream(localPath, FileMode.Open, FileAccess.Read);
+            return await gisbloxClient.Conversion.ToWkb(stream, fileName, ct);
+         },
+         parameters, toolName, description, result => BuildWkbConversionSummary(result), cancellationToken);
    }
 
    #region Internal helpers
 
    private static string BuildGeoJsonConversionSummary(int geoJsonLength, int wktLength)
    {
-      return $"I converted the WKT geometry string{ (wktLength > 0 ? $" with length {wktLength}" : "") } into a GeoJson Feature(Collection) string with length {geoJsonLength}.";
+      return $"I converted the WKT geometry string{(wktLength > 0 ? $" with length {wktLength}" : "")} into a GeoJson Feature(Collection) string with length {geoJsonLength}.";
    }
 
-   private static string BuildWkbConversionSummary(List<WKB> result, int length = 0)
+   private static string BuildWkbConversionSummary(List<WKB>? result, int length = 0)
    {
-      return $"I converted the GeoJson Feature(Collection){ (length > 0 ? $" with length {length}" : "") } into {result?.Count ?? 0} WKB object(s).";
+      return $"I converted the GeoJson Feature(Collection){(length > 0 ? $" with length {length}" : "")} into {result?.Count ?? 0} WKB object(s).";
    }
 
-   private static string BuildWktConversionSummary(List<WKT> result, int length = 0)
+   private static string BuildWktConversionSummary(List<WKT>? result, int length = 0)
    {
-      return $"I converted the GeoJson Feature(Collection){ (length > 0 ? $" with length {length}" : "") } into {result?.Count ?? 0} WKT object(s).";
+      return $"I converted the GeoJson Feature(Collection){(length > 0 ? $" with length {length}" : "")} into {result?.Count ?? 0} WKT object(s).";
    }
 
    #endregion

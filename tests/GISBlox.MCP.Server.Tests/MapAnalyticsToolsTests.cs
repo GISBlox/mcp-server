@@ -52,7 +52,7 @@ namespace GISBlox.MCP.Server.Tests
 
          Assert.IsNotNull(result);
 
-         var maps = result.Data as List<CustomerMap>;
+         var maps = result.Data as CustomerMapRecord;
 
          Assert.IsNotNull(maps);
       }

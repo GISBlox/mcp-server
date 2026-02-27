@@ -23,22 +23,13 @@ internal class InfoTools : McpToolBase
       CancellationToken cancellationToken = default)
    {
       var (toolName, description) = GetCurrentToolMetadata();
-      try
-      {
-         List<Subscription> result = await gisbloxClient.Info.GetSubscriptions(cancellationToken);
 
-         string summary = BuildSummary(result);
-         return ProcessResult(toolName, result, null, null, description, summary);         
-      }
-      catch (Exception ex)
-      {
-         return ProcessError(toolName, ex);
-      }
+      return await ExecuteToolAsync(ct => gisbloxClient.Info.GetSubscriptions(ct), null, toolName, description, BuildSummary, cancellationToken);
    }
 
    #region Internal helpers
 
-   private static string BuildSummary(List<Subscription> result)
+   private static string BuildSummary(List<Subscription>? result)
    {
       return $"I found **{result?.Count ?? 0}** subscription(s) for this user.";
    }

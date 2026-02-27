@@ -31,18 +31,9 @@ internal class ProjectionTools : McpToolBase
    {
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { lat, lon });      
-      try
-      {
-         Coordinate coordinate = new(lat, lon);
-         RDPoint result = await gisbloxClient.Projection.ToRDS(coordinate, cancellationToken);
-
-         string summary = BuildProjectionSummary(result == null || result.X == -9999);
-         return ProcessResult(toolName, result, parameters, null, description, summary);
-      }
-      catch (Exception ex)
-      {
-         return ProcessError(toolName, ex);
-      }
+      
+      return await ExecuteToolAsync(ct => gisbloxClient.Projection.ToRDS((Coordinate)new(lat, lon), ct),
+         parameters, toolName, description, result => BuildProjectionSummary(result == null || result.X == -9999), cancellationToken);
    }
 
    [McpServerTool(Name = "Wgs84ToRdsComplete")]
@@ -58,18 +49,8 @@ internal class ProjectionTools : McpToolBase
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { lat, lon });
       
-      try
-      {
-         Coordinate coordinate = new(lat, lon);
-         Location result = await gisbloxClient.Projection.ToRDSComplete(coordinate, cancellationToken);
-
-         string summary = BuildProjectionSummary(result == null || result.Lat == 0);
-         return ProcessResult(toolName, result, parameters, null, description, summary);
-      }
-      catch (Exception ex)
-      {
-         return ProcessError(toolName, ex);
-      }
+      return await ExecuteToolAsync(ct => gisbloxClient.Projection.ToRDSComplete((Coordinate)new(lat, lon), ct),
+         parameters, toolName, description, result => BuildProjectionSummary(result == null || result.Lat == 0), cancellationToken);
    }
 
    [McpServerTool(Name = "Wgs84ToRdsList")]
@@ -82,21 +63,16 @@ internal class ProjectionTools : McpToolBase
    {
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { coordinates });
-      try
-      {
-         if (coordinates == null || coordinates.Length == 0)
-            throw new ArgumentException("Coordinates array cannot be null or empty.", nameof(coordinates));
 
-         var coordList = ConvertToCoordinateList(coordinates);
-         List<RDPoint> result = await gisbloxClient.Projection.ToRDS(coordList, cancellationToken);
-
-         string summary = BuildProjectionSummary(result);
-         return ProcessResult(toolName, result, parameters, null, description, summary);
-      }
-      catch (Exception ex)
-      {
-         return ProcessError(toolName, ex);
-      }
+      return await ExecuteToolAsync(
+         async ct =>
+         {
+            if (coordinates == null || coordinates.Length == 0)
+               throw new ArgumentException("Coordinates array cannot be null or empty.", nameof(coordinates));
+            var coordList = ConvertToCoordinateList(coordinates);
+            return await gisbloxClient.Projection.ToRDS(coordList, ct);
+         },
+         parameters, toolName, description, BuildProjectionSummary, cancellationToken);
    }
 
    [McpServerTool(Name = "Wgs84ToRdsCompleteList")]
@@ -109,21 +85,16 @@ internal class ProjectionTools : McpToolBase
    {
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { coordinates });
-      try
-      {
-         if (coordinates == null || coordinates.Length == 0)
-            throw new ArgumentException("Coordinates array cannot be null or empty.", nameof(coordinates));
 
-         var coordList = ConvertToCoordinateList(coordinates);
-         List<Location> result = await gisbloxClient.Projection.ToRDSComplete(coordList, cancellationToken);
-
-         string summary = BuildProjectionSummary(result);
-         return ProcessResult(toolName, result, parameters, null, description, summary);
-      }
-      catch (Exception ex)
-      {
-         return ProcessError(toolName, ex);
-      }
+      return await ExecuteToolAsync(
+         async ct =>
+         {
+            if (coordinates == null || coordinates.Length == 0)
+               throw new ArgumentException("Coordinates array cannot be null or empty.", nameof(coordinates));
+            var coordList = ConvertToCoordinateList(coordinates);
+            return await gisbloxClient.Projection.ToRDSComplete(coordList, ct);
+         },
+         parameters, toolName, description, BuildProjectionSummary, cancellationToken);
    }
 
    [McpServerTool(Name = "RdsToWgs84")]
@@ -140,18 +111,10 @@ internal class ProjectionTools : McpToolBase
    {
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { x, y, decimals });
-      try
-      {
-         RDPoint rdPoint = new(x, y);
-         Coordinate result = await gisbloxClient.Projection.ToWGS84(rdPoint, decimals, cancellationToken);
 
-         string summary = BuildProjectionSummary(result == null || result.Lat == 0);
-         return ProcessResult(toolName, result, parameters, null, description, summary);
-      }
-      catch (Exception ex)
-      {
-         return ProcessError(toolName, ex);
-      }
+      return await ExecuteToolAsync(
+         ct => gisbloxClient.Projection.ToWGS84((RDPoint)new(x, y), decimals, ct),
+         parameters, toolName, description, result => BuildProjectionSummary(result == null || result.Lat == 0), cancellationToken);
    }
       
    [McpServerTool(Name = "RdsToWgs84Complete")]
@@ -168,18 +131,10 @@ internal class ProjectionTools : McpToolBase
    {
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { x, y, decimals });
-      try
-      {
-         RDPoint rdPoint = new(x, y);
-         Location result = await gisbloxClient.Projection.ToWGS84Complete(rdPoint, decimals, cancellationToken);
-
-         string summary = BuildProjectionSummary(result == null || result.Lat == 0);
-         return ProcessResult(toolName, result, parameters, null, description, summary);
-      }
-      catch (Exception ex)
-      {
-         return ProcessError(toolName, ex);
-      }
+      
+      return await ExecuteToolAsync(
+         ct => gisbloxClient.Projection.ToWGS84Complete((RDPoint)new(x, y), decimals, ct),
+         parameters, toolName, description, result => BuildProjectionSummary(result == null || result.Lat == 0), cancellationToken);
    }
 
    [McpServerTool(Name = "RdsToWgs84List")]
@@ -194,21 +149,16 @@ internal class ProjectionTools : McpToolBase
    {
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { points, decimals });
-      try
-      {
-         if (points == null || points.Length == 0)
-            throw new ArgumentException("Points array cannot be null or empty.", nameof(points));
-
-         var rdPoints = ConvertToRDPointList(points);
-         List<Coordinate> result = await gisbloxClient.Projection.ToWGS84(rdPoints, decimals, cancellationToken);
-
-         string summary = BuildProjectionSummary(result);
-         return ProcessResult(toolName, result, parameters, null, description, summary);
-      }
-      catch (Exception ex)
-      {
-         return ProcessError(toolName, ex);
-      }
+      
+      return await ExecuteToolAsync(
+         async ct =>
+         {
+            if (points == null || points.Length == 0)
+               throw new ArgumentException("Points array cannot be null or empty.", nameof(points));
+            var rdPoints = ConvertToRDPointList(points);
+            return await gisbloxClient.Projection.ToWGS84(rdPoints, decimals, ct);
+         },
+         parameters, toolName, description, BuildProjectionSummary, cancellationToken);
    }
 
    [McpServerTool(Name = "RdsToWgs84CompleteList")]
@@ -223,21 +173,16 @@ internal class ProjectionTools : McpToolBase
    {
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { points, decimals });
-      try
-      {
-         if (points == null || points.Length == 0)
-            throw new ArgumentException("Points array cannot be null or empty.", nameof(points));
-
-         var rdPoints = ConvertToRDPointList(points);
-         List<Location> result = await gisbloxClient.Projection.ToWGS84Complete(rdPoints, decimals, cancellationToken);
-
-         string summary = BuildProjectionSummary(result);
-         return ProcessResult(toolName, result, parameters, null, description, summary);
-      }
-      catch (Exception ex)
-      {
-         return ProcessError(toolName, ex);
-      }
+      
+      return await ExecuteToolAsync(
+         async ct =>
+         {
+            if (points == null || points.Length == 0)
+               throw new ArgumentException("Points array cannot be null or empty.", nameof(points));
+            var rdPoints = ConvertToRDPointList(points);
+            return await gisbloxClient.Projection.ToWGS84Complete(rdPoints, decimals, ct);
+         },
+         parameters, toolName, description, BuildProjectionSummary, cancellationToken);
    }
 
    #region Internal Helpers
@@ -273,10 +218,10 @@ internal class ProjectionTools : McpToolBase
       return $"The reprojection was successful{(isNull ? ", but the result is null or invalid. Check if the input parameters are correct" : string.Empty)}.";
    }
 
-   private static string BuildProjectionSummary(IEnumerable collection)
+   private static string BuildProjectionSummary(IEnumerable? collection)
    {
       int invalidCount = 0;
-      var items = collection.Cast<object>().ToList(); 
+      var items = collection?.Cast<object>().ToList() ?? [];
       foreach (var item in items)
       {
          if (item == null)

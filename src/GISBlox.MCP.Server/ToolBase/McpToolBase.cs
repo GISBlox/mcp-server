@@ -22,6 +22,44 @@ namespace GISBlox.MCP.Server.ToolBase
       protected abstract string ToolGroupName { get; }
 
       /// <summary>
+      /// Generic helper method for executing tool operations with standardized error handling and result processing.
+      /// </summary>
+      /// <typeparam name="TResult">The type of the result returned by the operation.</typeparam>
+      /// <param name="operation">The async operation to execute.</param>
+      /// <param name="parameters">Optional parameters used during the tool execution.</param>
+      /// <param name="toolName">The name of the tool being executed.</param>
+      /// <param name="description">The description of the tool.</param>
+      /// <param name="summaryBuilder">Optional function to build a summary from the result.</param>
+      /// <param name="cancellationToken">Cancellation token for the operation.</param>
+      /// <returns>A McpToolOutput containing the result or error information.</returns>
+      protected async Task<McpToolOutput> ExecuteToolAsync<TResult>(Func<CancellationToken, Task<TResult>> operation,
+         object? parameters, string toolName, string description, Func<TResult?, string>? summaryBuilder, CancellationToken cancellationToken)
+      {
+         try
+         {
+            TResult result = await operation(cancellationToken);
+
+            string summary = summaryBuilder?.Invoke(result) ?? string.Empty;
+            return ProcessResult(toolName, result, parameters, null, description, summary);
+         }
+         catch (Exception ex)
+         {
+            return ProcessError(toolName, ex);
+         }
+      }
+
+      /// <summary>
+      /// Extracts the tool name and description from the ToolAttribute applied to the method that calls this function.
+      /// </summary>
+      /// <param name="methodName">The name of the method that calls this function.</param>
+      /// <returns>A tuple containing the tool name and description.</returns>
+      protected (string toolName, string description) GetCurrentToolMetadata(
+          [System.Runtime.CompilerServices.CallerMemberName] string methodName = "")
+      {
+         return ToolAttributeHelper.GetToolMetadata(this.GetType(), methodName);
+      }
+
+      /// <summary>
       /// Processes the result of a tool execution and returns an output object containing the tool's name, status, metadata, and formatted markdown.
       /// </summary>
       /// <param name="toolName">The name of the tool being processed. Used to identify the specific execution context.</param>
@@ -31,7 +69,7 @@ namespace GISBlox.MCP.Server.ToolBase
       /// <param name="notes">Optional notes to include in the output. Can be used to provide further insights or comments about the tool execution.</param>
       /// <param name="summary">Optional summary information describing the outcome of the tool execution. Included in the output for quick reference.</param>
       /// <returns>A McpToolOutput object containing the tool's name, summary, metadata, result data, and a formatted markdown representation of the execution.</returns>
-      public McpToolOutput ProcessResult(string toolName, object? result, object? parameters = null, object? metadata = null, string? notes = null, string ? summary = null)
+      protected McpToolOutput ProcessResult(string toolName, object? result, object? parameters = null, object? metadata = null, string? notes = null, string ? summary = null)
       {
          ResultEnvelope<object?> envelope = new()
          {
@@ -47,14 +85,7 @@ namespace GISBlox.MCP.Server.ToolBase
             Notes = notes
          };
 
-         return new McpToolOutput
-         {
-            Tool = envelope.ToolName,
-            Summary = envelope.Summary,
-            Metadata = envelope.Metadata,
-            Data = envelope.Data,
-            Markdown = BuildMarkdown(envelope)
-         };
+         return CreateToolOutput(envelope);         
       }
 
       /// <summary>
@@ -65,7 +96,7 @@ namespace GISBlox.MCP.Server.ToolBase
       /// <param name="metadata">Optional additional metadata related to the error.</param>
       /// <param name="notes">Optional notes to include in the error output. Can provide further insights or comments regarding the error.</param>
       /// <returns>A McpToolOutput instance containing the tool name, error status, metadata, error message, and a formatted markdown representation of the error.</returns>
-      public McpToolOutput ProcessError(string toolName, Exception ex, object? metadata = null, string? notes = null)
+      protected McpToolOutput ProcessError(string toolName, Exception ex, object? metadata = null, string? notes = null)
       {
          ResultEnvelope<object?> envelope = new()
          {
@@ -77,6 +108,11 @@ namespace GISBlox.MCP.Server.ToolBase
             Notes = notes ?? "An error occurred during tool execution."
          };
 
+         return CreateToolOutput(envelope);
+      }
+
+      private static McpToolOutput CreateToolOutput(ResultEnvelope<object?> envelope)
+      {
          return new McpToolOutput
          {
             Tool = envelope.ToolName,
@@ -208,7 +244,7 @@ namespace GISBlox.MCP.Server.ToolBase
          // Check if it's a collection
          if (value is IEnumerable enumerable)
          {
-            var items = enumerable.Cast<object>().ToList();
+            List<object> items = [.. enumerable.Cast<object>()];
             int count = items.Count;
 
             if (count == 0)
@@ -223,17 +259,6 @@ namespace GISBlox.MCP.Server.ToolBase
                return $"[{count} items: {preview}]";
          }
          return value.ToString() ?? "";
-      }
-
-      /// <summary>
-      /// Extracts the tool name and description from the ToolAttribute applied to the method that calls this function.
-      /// </summary>
-      /// <param name="methodName">The name of the method that calls this function.</param>
-      /// <returns>A tuple containing the tool name and description.</returns>
-      protected (string toolName, string description) GetCurrentToolMetadata(
-          [System.Runtime.CompilerServices.CallerMemberName] string methodName = "")
-      {
-          return ToolAttributeHelper.GetToolMetadata(this.GetType(), methodName);
-      }    
+      }       
    }
 }

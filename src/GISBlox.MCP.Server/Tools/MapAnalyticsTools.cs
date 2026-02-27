@@ -26,17 +26,9 @@ internal class MapAnalyticsTools : McpToolBase
       CancellationToken cancellationToken = default)
    {
       var (toolName, description) = GetCurrentToolMetadata();
-      try
-      {
-         CustomerMapRecord result = await gisbloxClient.MapAnalytics.ListTrackedMaps(cancellationToken);
-
-         string summary = BuildMapResultSummary(result);
-         return ProcessResult(toolName, result.Maps, null, null, description, summary);
-      }
-      catch (Exception ex)
-      {
-         return ProcessError(toolName, ex);
-      }
+      
+      return await ExecuteToolAsync(ct => gisbloxClient.MapAnalytics.ListTrackedMaps(ct),
+         null, toolName, description, result => BuildMapResultSummary(result), cancellationToken);
    }
 
    [McpServerTool(Name = "MapsKpisListAll")]
@@ -52,17 +44,8 @@ internal class MapAnalyticsTools : McpToolBase
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { dateRange, endDate });
 
-      try
-      {
-         MapKpiRecord result = await gisbloxClient.MapAnalytics.GetMapsKpis((AnalyticsDateRangeEnum)dateRange, ParseDate(endDate), cancellationToken);
-
-         string summary = BuildKpiResultSummary(result);
-         return ProcessResult(toolName, result, parameters, null, description, summary);
-      }
-      catch (Exception ex)
-      {
-         return ProcessError(toolName, ex);
-      }
+      return await ExecuteToolAsync(ct => gisbloxClient.MapAnalytics.GetMapsKpis((AnalyticsDateRangeEnum)dateRange, ParseDate(endDate), ct),
+         parameters, toolName, description, BuildKpiResultSummary, cancellationToken);
    }
 
    [McpServerTool(Name = "MapKpisGet")]
@@ -80,17 +63,8 @@ internal class MapAnalyticsTools : McpToolBase
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { mapId, dateRange, endDate });
 
-      try
-      {
-         MapKpiRecord result = await gisbloxClient.MapAnalytics.GetMapKpis(mapId, (AnalyticsDateRangeEnum)dateRange, ParseDate(endDate), cancellationToken);
-
-         string summary = BuildKpiResultSummary(result);
-         return ProcessResult(toolName, result, parameters, null, description, summary);
-      }
-      catch (Exception ex)
-      {
-         return ProcessError(toolName, ex);
-      }
+      return await ExecuteToolAsync(ct => gisbloxClient.MapAnalytics.GetMapKpis(mapId, (AnalyticsDateRangeEnum)dateRange, ParseDate(endDate), ct),
+         parameters, toolName, description, BuildKpiResultSummary, cancellationToken);
    }
 
    [McpServerTool(Name = "MapEngagementGet")]
@@ -108,17 +82,8 @@ internal class MapAnalyticsTools : McpToolBase
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { mapId, dateRange, endDate });
 
-      try
-      {
-         EngagementRecord result = await gisbloxClient.MapAnalytics.GetMapEngagement(mapId, (AnalyticsDateRangeEnum)dateRange, ParseDate(endDate), cancellationToken);
-
-         string summary = BuildEngagementSummary(result);
-         return ProcessResult(toolName, result, parameters, null, description, summary);
-      }
-      catch (Exception ex)
-      {
-         return ProcessError(toolName, ex);
-      }
+      return await ExecuteToolAsync(ct => gisbloxClient.MapAnalytics.GetMapEngagement(mapId, (AnalyticsDateRangeEnum)dateRange, ParseDate(endDate), ct),
+         parameters, toolName, description, BuildEngagementSummary, cancellationToken);
    }
 
    #region Internal helpers
@@ -138,12 +103,12 @@ internal class MapAnalyticsTools : McpToolBase
       return parsedEndDate;
    }
 
-   private static string BuildMapResultSummary(CustomerMapRecord customerMapRecord)
+   private static string BuildMapResultSummary(CustomerMapRecord? customerMapRecord)
    {
       return $"I found **{customerMapRecord?.Maps?.Count ?? 0}** tracked map(s) for this customer.";
    }
 
-   private static string BuildKpiResultSummary(MapKpiRecord kpiRecord)
+   private static string BuildKpiResultSummary(MapKpiRecord? kpiRecord)
    {
       StringBuilder sb = new();
       if (kpiRecord != null && kpiRecord.MapKpis != null)
@@ -156,7 +121,7 @@ internal class MapAnalyticsTools : McpToolBase
       return sb.ToString();
    }
 
-   private static string BuildEngagementSummary(EngagementRecord engagementRecord)
+   private static string BuildEngagementSummary(EngagementRecord? engagementRecord)
    {
       StringBuilder sb = new();
       if (engagementRecord != null && engagementRecord.Engagements != null)
