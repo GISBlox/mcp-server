@@ -24,6 +24,8 @@ namespace GISBlox.MCP.Server.Tests
 
       private static readonly byte[] WKB_POINT_30_10_5_BYTES = [1, 233, 3, 0, 0, 0, 0, 0, 0, 0, 0, 62, 64, 0, 0, 0, 0, 0, 0, 36, 64, 0, 0, 0, 0, 0, 0, 20, 64];
 
+      private static T? GetData<T>(McpToolOutput output) where T : class => output.Data as T;
+
       #region Initialization and cleanup
 
       [TestInitialize]
@@ -46,8 +48,6 @@ namespace GISBlox.MCP.Server.Tests
       }
 
       #endregion
-
-      private static T? GetData<T>(McpToolOutput output) where T : class => output.Data as T;
 
       #region WKT -> GeoJson
 

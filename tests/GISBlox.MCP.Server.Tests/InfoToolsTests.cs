@@ -19,6 +19,8 @@ namespace GISBlox.MCP.Server.Tests
       private GISBloxClient _client = null!;
       private InfoTools _infoTools = null!;
 
+      private static T? GetData<T>(McpToolOutput output) where T : class => output.Data as T;
+
       #region Initialization and cleanup
 
       [TestInitialize]
@@ -41,9 +43,7 @@ namespace GISBlox.MCP.Server.Tests
       }
 
       #endregion
-
-      private static T? GetData<T>(McpToolOutput output) where T : class => output.Data as T;
-
+      
       [TestMethod]
       public async Task GetSubscriptionInfo()
       {

@@ -3,6 +3,8 @@
 // ----------------------------------------------------
 
 using GISBlox.MCP.Server.Attributes;
+using GISBlox.MCP.Server.Helpers;
+using GISBlox.MCP.Server.ToolBase;
 using GISBlox.Services.SDK;
 using GISBlox.Services.SDK.Models;
 using ModelContextProtocol.Server;
@@ -15,113 +17,153 @@ using System.Text.RegularExpressions;
 [GISBlox.MCP.Server.Attributes.Category("Storytelling Layers")]
 [GISBlox.MCP.Server.Attributes.Tags("Visualization", "Conversational Data", "Postal Codes", "GeoJSON", "ZipChat")]
 [Description("Tools to visualize geometries using geojson.io.")]
-internal class VisualizationTools
+internal class VisualizationTools : McpToolBase
 {
+   private const int FeatureConversionDelayMs = 25;
    private const string GeoJsonIoUrlPrefix = "https://geojson.io/#data=data:text/x-url,";
    private const string GISBloxServicesBaseUrl = "https://services.gisblox.com/v1";
    private const string ZipChatCopilotUrlPrefix = "https://zipchat.gisblox.com/?pc=";
-
+   
    private static readonly JsonSerializerOptions CompactJsonOptions = new() { WriteIndented = false };
 
+   protected override string ToolGroupName => "Storytelling Layers";
 
    [McpServerTool(Name = "PostalCodeVisualize")]
    [Description("Generates a geojson.io URL to visualize the geometry of a given postal code.")]
-   public static async Task<string> VisualizePostalCode(
+   public async Task<McpToolOutput> VisualizePostalCode(
       GISBloxClient gisbloxClient,
       [ParamDesc("The Dutch postal code (4 digits like '1234' or 6 characters like '1234AB') to visualize.")]
       string postalCode,
       CancellationToken cancellationToken = default)
-   {  
-      string cleanId = SanitizePostalCodeId(postalCode, out bool isPostalCode4);
-      string identifier = isPostalCode4 ? $"PC4_{cleanId}" : $"PC6_{cleanId}";
+   {
+      var (toolName, description) = GetCurrentToolMetadata();
+      var parameters = ToolParameterHelper.Extract(new { postalCode });
 
-      string feature;
-      if (isPostalCode4)
-      {
-         PostalCode4Record record = await gisbloxClient.PostalCodes.GetPostalCodeRecord<PostalCode4Record>(cleanId, CoordinateSystem.WGS84, cancellationToken);
+      return await ExecuteToolAsync<string>(
+         async ct =>
+         {
+            string cleanId = SanitizePostalCodeId(postalCode, out bool isPostalCode4);
+            string identifier = isPostalCode4 ? $"PC4_{cleanId}" : $"PC6_{cleanId}";
 
-         var pc4 = GetFirstPostalCodeOrThrow(record.PostalCode, cleanId, "4");
-         feature = await WktToFeature(gisbloxClient, pc4, cancellationToken);
-      }
-      else
-      {
-         PostalCode6Record record = await gisbloxClient.PostalCodes.GetPostalCodeRecord<PostalCode6Record>(cleanId, CoordinateSystem.WGS84, cancellationToken);
+            string feature;
+            if (isPostalCode4)
+            {
+               PostalCode4Record record = await gisbloxClient.PostalCodes.GetPostalCodeRecord<PostalCode4Record>(cleanId, CoordinateSystem.WGS84, ct);
 
-         var pc6 = GetFirstPostalCodeOrThrow(record.PostalCode, cleanId, "6");
-         feature = await WktToFeature(gisbloxClient, pc6, cancellationToken);
-      }
+               PostalCode4 pc4 = GetFirstPostalCodeOrThrow(record.PostalCode, cleanId, "4");
+               feature = await WktToFeature(gisbloxClient, pc4, ct);
+            }
+            else
+            {
+               PostalCode6Record record = await gisbloxClient.PostalCodes.GetPostalCodeRecord<PostalCode6Record>(cleanId, CoordinateSystem.WGS84, ct);
 
-      string geojson = CreateFeatureCollection([feature]);
-      string dataLakeUrl = await UploadToDataLakeAndCreatePublicUrl(gisbloxClient, geojson, identifier, cancellationToken);
+               PostalCode6 pc6 = GetFirstPostalCodeOrThrow(record.PostalCode, cleanId, "6");
+               feature = await WktToFeature(gisbloxClient, pc6, ct);
+            }
 
-      return CreateGeoJsonIoUrl(dataLakeUrl);
+            string geojson = CreateFeatureCollection([feature]);
+            string dataLakeUrl = await UploadToDataLakeAndCreatePublicUrl(gisbloxClient, geojson, identifier, ct);
+
+            return CreateGeoJsonIoUrl(dataLakeUrl);
+         },
+         parameters, toolName, description, null, cancellationToken);
    }
 
    [McpServerTool(Name = "PostalCodeVisualizeNeighbours")]
    [Description("Generates a geojson.io URL to visualize the geometry of a given postal code and its neighbouring postal codes.")]
-   public static async Task<string> VisualizePostalCodeNeighbours(
+   public async Task<McpToolOutput> VisualizePostalCodeNeighbours(
       GISBloxClient gisbloxClient,
       [ParamDesc("The Dutch postal code (4 digits like '1234' or 6 characters like '1234AB') to visualize with neighbours.")]
       string postalCode,
       CancellationToken cancellationToken = default)
    {
-      string cleanId = SanitizePostalCodeId(postalCode, out bool isPostalCode4);
-      string identifier = isPostalCode4 ? $"PC4N_{cleanId}" : $"PC6N_{cleanId}";
+      var (toolName, description) = GetCurrentToolMetadata();
+      var parameters = ToolParameterHelper.Extract(new { postalCode });
 
-      List<string> features = [];
-      if (isPostalCode4)
-      {
-         PostalCode4Record record = await gisbloxClient.PostalCodes.GetPostalCodeNeighbours<PostalCode4Record>(cleanId, false, CoordinateSystem.WGS84, cancellationToken);
+      int neighbourCount = 0;
 
-         if (record.PostalCode is null || record.PostalCode.Count == 0)
-            throw new InvalidOperationException($"No neighbouring postal codes returned for '{cleanId}'.");
-
-         features = new(record.PostalCode.Count);
-         foreach (PostalCode4 pc4 in record.PostalCode)
+      return await ExecuteToolAsync<string>(
+         async ct =>
          {
-            cancellationToken.ThrowIfCancellationRequested();
-            string feature = await WktToFeature(gisbloxClient, pc4, cancellationToken);
-            features.Add(feature);
+            string cleanId = SanitizePostalCodeId(postalCode, out bool isPostalCode4);
+            string identifier = isPostalCode4 ? $"PC4N_{cleanId}" : $"PC6N_{cleanId}";
 
-            await Task.Delay(495, cancellationToken); // To avoid exceeding API call quota
-         }
-      }
-      else
-      {
-         PostalCode6Record record = await gisbloxClient.PostalCodes.GetPostalCodeNeighbours<PostalCode6Record>(cleanId, false, CoordinateSystem.WGS84, cancellationToken);
+            List<string> features;
+            if (isPostalCode4)
+            {
+               PostalCode4Record record = await gisbloxClient.PostalCodes.GetPostalCodeNeighbours<PostalCode4Record>(cleanId, false, CoordinateSystem.WGS84, ct);
+               
+               if (record.PostalCode is null || record.PostalCode.Count == 0)
+                  throw new InvalidOperationException($"No neighbouring postal codes returned for '{cleanId}'.");
+               
+               neighbourCount = record.PostalCode.Count;
+               features = await ConvertPostalCodesToFeatures(gisbloxClient, record.PostalCode, WktToFeature, ct);
+            }
+            else
+            {
+               PostalCode6Record record = await gisbloxClient.PostalCodes.GetPostalCodeNeighbours<PostalCode6Record>(cleanId, false, CoordinateSystem.WGS84, ct);
+               
+               if (record.PostalCode is null || record.PostalCode.Count == 0)
+                  throw new InvalidOperationException($"No neighbouring postal codes returned for '{cleanId}'.");
+               
+               neighbourCount = record.PostalCode.Count;
+               features = await ConvertPostalCodesToFeatures(gisbloxClient, record.PostalCode, WktToFeature, ct);
+            }
 
-         if (record.PostalCode is null || record.PostalCode.Count == 0)
-            throw new InvalidOperationException($"No neighbouring postal codes returned for '{cleanId}'.");
+            string geojson = CreateFeatureCollection(features);
+            string dataLakeUrl = await UploadToDataLakeAndCreatePublicUrl(gisbloxClient, geojson, identifier, ct);
 
-         features = new(record.PostalCode.Count);
-         foreach (PostalCode6 pc6 in record.PostalCode)
-         {
-            cancellationToken.ThrowIfCancellationRequested();
-            string feature = await WktToFeature(gisbloxClient, pc6, cancellationToken);
-            features.Add(feature);
-
-            await Task.Delay(495, cancellationToken);
-         }
-      }
-
-      string geojson = CreateFeatureCollection(features);
-      string dataLakeUrl = await UploadToDataLakeAndCreatePublicUrl(gisbloxClient, geojson, identifier, cancellationToken);
-
-      return CreateGeoJsonIoUrl(dataLakeUrl);
+            return CreateGeoJsonIoUrl(dataLakeUrl);
+         },
+         parameters, toolName, description, _ => $"I found **{neighbourCount}** neighbouring postal codes.", cancellationToken);
    }
+
+   
 
    [McpServerTool(Name = "ZipchatQuery")]
    [Description("Ask ZipChat Copilot for information on the given postal code and have it generate code to retrieve postal code data in third-party applications.")]
-   public static string AskZipChatCopilot(
+   public McpToolOutput AskZipChatCopilot(
       [ParamDesc("The Dutch postal code (4 digits like '1234' or 6 characters like '1234AB') to query.")]
       string postalCodeId,
       [ParamDesc("If true, includes neighbouring postal codes in the ZipChat query.")]
       bool showNeighbours = false)
    {
-      return $"{ZipChatCopilotUrlPrefix}{postalCodeId}&c=1&n={(showNeighbours ? "1" : "0")}";
+      var (toolName, description) = GetCurrentToolMetadata();
+      var parameters = ToolParameterHelper.Extract(new { postalCodeId, showNeighbours });
+
+      try
+      {
+         string result = $"{ZipChatCopilotUrlPrefix}{postalCodeId}&c=1&n={(showNeighbours ? "1" : "0")}";
+         return ProcessResult(toolName, result, parameters, null, description);
+      }
+      catch (Exception ex)
+      {
+         return ProcessError(toolName, ex);
+      }
    }
 
    #region Internal Helpers
+
+   private static async Task<List<string>> ConvertPostalCodesToFeatures<TPostalCode>(
+      GISBloxClient gisbloxClient,
+      IList<TPostalCode> postalCodes,
+      Func<GISBloxClient, TPostalCode, CancellationToken, Task<string>> converter,
+      CancellationToken cancellationToken)
+   {
+      var features = new List<string>(postalCodes.Count);
+
+      foreach (var postalCode in postalCodes)
+      {
+         cancellationToken.ThrowIfCancellationRequested();
+
+         string feature = await converter(gisbloxClient, postalCode, cancellationToken);
+         features.Add(feature);
+
+         await Task.Delay(FeatureConversionDelayMs, cancellationToken);
+      }
+
+      return features;
+   }
 
    private static string SanitizePostalCodeId(string id, out bool isPC4)
    {
@@ -157,31 +199,29 @@ internal class VisualizationTools
 
    private static async Task<string> WktToFeature(GISBloxClient gisbloxClient, PostalCode4 pc4, CancellationToken cancellationToken = default)
    {
-      //string feature = await ConversionTools.ConvertToGeoJson(gisbloxClient, pc4.Location.Geometry.WKT, false, cancellationToken);
-      //return AddFeatureProperties(feature, new Dictionary<string, string>
-      //{
-      //   { "postcode", pc4.Id },
-      //   { "wijk(en)", pc4.Location.Wijken },
-      //   { "gemeente", pc4.Location.Gemeente },
-      //   { "omtrek", FormatDouble(pc4.Location.Geometry.PerimeterM) + " meter" },
-      //   { "oppervlakte", FormatDouble(pc4.Location.Geometry.AreaM2) + " m2" }
-      //});
-      return null;
+      string feature = await gisbloxClient.Conversion.ToGeoJson(new WKT(pc4.Location.Geometry.WKT), false, cancellationToken);      
+      return AddFeatureProperties(feature, new Dictionary<string, string>
+      {
+         { "postcode", pc4.Id },
+         { "wijk(en)", pc4.Location.Wijken },
+         { "gemeente", pc4.Location.Gemeente },
+         { "omtrek", FormatDouble(pc4.Location.Geometry.PerimeterM) + " meter" },
+         { "oppervlakte", FormatDouble(pc4.Location.Geometry.AreaM2) + " m2" }
+      });      
    }
 
    private static async Task<string> WktToFeature(GISBloxClient gisbloxClient, PostalCode6 pc6, CancellationToken cancellationToken = default)
    {
-      //string feature = await ConversionTools.ConvertToGeoJson(gisbloxClient, pc6.Location.Geometry.WKT, false, cancellationToken);
-      //return AddFeatureProperties(feature, new Dictionary<string, string>
-      //{
-      //   { "postcode", pc6.Id },
-      //   { "buurt", pc6.Location.Buurt },
-      //   { "wijk", pc6.Location.Wijk },
-      //   { "gemeente", pc6.Location.Gemeente },
-      //   { "omtrek", FormatDouble(pc6.Location.Geometry.PerimeterM) + " meter" },
-      //   { "oppervlakte", FormatDouble(pc6.Location.Geometry.AreaM2) + " m2" }
-      //});
-      return null;
+      string feature = await gisbloxClient.Conversion.ToGeoJson(new WKT(pc6.Location.Geometry.WKT), false, cancellationToken);      
+      return AddFeatureProperties(feature, new Dictionary<string, string>
+      {
+         { "postcode", pc6.Id },
+         { "buurt", pc6.Location.Buurt },
+         { "wijk", pc6.Location.Wijk },
+         { "gemeente", pc6.Location.Gemeente },
+         { "omtrek", FormatDouble(pc6.Location.Geometry.PerimeterM) + " meter" },
+         { "oppervlakte", FormatDouble(pc6.Location.Geometry.AreaM2) + " m2" }
+      });      
    }
 
    private static string AddFeatureProperties(string geoJson, Dictionary<string, string> featureProperties)
@@ -271,7 +311,7 @@ internal class VisualizationTools
       return Math.Round(value)
          .ToString("#,0", System.Globalization.CultureInfo.InvariantCulture)
          .Replace(",", ".");
-   }
+   }   
 
    #endregion
 }

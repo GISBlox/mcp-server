@@ -21,6 +21,8 @@ namespace GISBlox.MCP.Server.Tests
 
       const int API_QUOTA_DELAY = 1000;  // Allows to run all tests together without exceeding API call quota
 
+      private static T? GetData<T>(McpToolOutput output) where T : class => output.Data as T;
+
       #region Initialization and cleanup
 
       [TestInitialize]
@@ -43,8 +45,6 @@ namespace GISBlox.MCP.Server.Tests
       }
 
       #endregion
-
-      private static T? GetData<T>(McpToolOutput output) where T : class => output.Data as T;
 
       [TestMethod]
       public async Task ListTrackedMaps()

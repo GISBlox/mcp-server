@@ -20,7 +20,8 @@ internal class ConversionTools : McpToolBase
 
    [McpServerTool(Name = "WktToGeoJson")]
    [Description("Converts a WKT geometry string into a GeoJson Feature(Collection) string.")]
-   public async Task<McpToolOutput> ConvertToGeoJson(GISBloxClient gisbloxClient,
+   public async Task<McpToolOutput> ConvertToGeoJson(
+      GISBloxClient gisbloxClient,
       [ParamDesc("The Well-Known Text (WKT) geometry string to convert.")]
       string wkt,
       [ParamDesc("If true, returns a GeoJson FeatureCollection; otherwise returns a single Feature.")]
