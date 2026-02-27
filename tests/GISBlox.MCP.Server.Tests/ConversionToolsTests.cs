@@ -47,17 +47,18 @@ namespace GISBlox.MCP.Server.Tests
 
       #endregion
 
+      private static T? GetData<T>(McpToolOutput output) where T : class => output.Data as T;
+
       #region WKT -> GeoJson
 
       [TestMethod]
       public async Task WktToGeoJson_ConvertMultiPolygon()
       {
          string wkt = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)),((15 5, 40 10, 10 20, 5 10, 15 5)))";         
-         McpToolOutput result = await _conversionTools.ConvertToGeoJson(_client, wkt, true, CancellationToken.None);
          
-         Assert.IsNotNull(result);
+         McpToolOutput result = await _conversionTools.ConvertToGeoJson(_client, wkt, true, CancellationToken.None);
+         string? geoJson = GetData<string>(result);
 
-         var geoJson = result.Data as string;
          Assert.IsNotNull(geoJson, "Response is empty.");
          Assert.IsTrue(IsValidGeoJson(geoJson), "Invalid GeoJSON.");
       }
@@ -66,11 +67,10 @@ namespace GISBlox.MCP.Server.Tests
       public async Task WktToGeoJson_ConvertMultiPolygonWithInnerRing()
       {
          string wkt = "MULTIPOLYGON (((40 40, 20 45, 45 30, 40 40)),((20 35, 10 30, 10 10, 30 5, 45 20, 20 35),(30 20, 20 15, 20 25, 30 20)))";
+         
          McpToolOutput result = await _conversionTools.ConvertToGeoJson(_client, wkt, false, CancellationToken.None);
+         string? geoJson = GetData<string>(result);
 
-         Assert.IsNotNull(result);
-
-         var geoJson = result.Data as string;
          Assert.IsNotNull(geoJson, "Response is empty.");
          Assert.IsTrue(IsValidGeoJson(geoJson), "Invalid GeoJSON.");
       }
@@ -85,9 +85,7 @@ namespace GISBlox.MCP.Server.Tests
          string geoJson = "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[30,10,5]},\"properties\":{\"zValue\":23,\"name\":\"Single Point\"}}";
 
          McpToolOutput result = await _conversionTools.ConvertToWkt(_client, geoJson, CancellationToken.None);
-         Assert.IsNotNull(result);
-
-         List<WKT>? wktList = result.Data as List<WKT>;
+         List<WKT>? wktList = GetData<List<WKT>>(result);
 
          Assert.IsNotNull(wktList, "Returned WKT list is null.");
          Assert.IsGreaterThan(0, wktList.Count, "Returned WKT list is empty.");
@@ -115,9 +113,7 @@ namespace GISBlox.MCP.Server.Tests
             await File.WriteAllTextAsync(localPath, geoJson, CancellationToken.None);
 
             McpToolOutput result = await _conversionTools.ConvertToWktFromFile(_client, localPath, CancellationToken.None);
-            Assert.IsNotNull(result);
-
-            List<WKT>? wktList = result.Data as List<WKT>;
+            List<WKT>? wktList = GetData<List<WKT>>(result);
 
             Assert.IsNotNull(wktList, "Returned WKT list is null.");
             Assert.IsGreaterThan(0, wktList.Count, "Returned WKT list is empty.");
@@ -151,9 +147,7 @@ namespace GISBlox.MCP.Server.Tests
          string geoJson = "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[30,10,5]},\"properties\":{\"zValue\":23,\"name\":\"Single Point\"}}";
 
          McpToolOutput result = await _conversionTools.ConvertToWkb(_client, geoJson, CancellationToken.None);
-         Assert.IsNotNull(result);
-
-         List<WKB>? wkbList = result.Data as List<WKB>;
+         List<WKB>? wkbList = GetData<List<WKB>>(result);
 
          Assert.IsNotNull(wkbList, "Returned WKB list is null.");
          Assert.IsGreaterThan(0, wkbList.Count, "Returned WKB list is empty.");
@@ -181,9 +175,7 @@ namespace GISBlox.MCP.Server.Tests
             await File.WriteAllTextAsync(localPath, geoJson, CancellationToken.None);
 
             McpToolOutput result = await _conversionTools.ConvertToWkbFromFile(_client, localPath, CancellationToken.None);
-            Assert.IsNotNull(result);
-
-            List<WKB>? wkbList = result.Data as List<WKB>;
+            List<WKB>? wkbList = GetData<List<WKB>>(result);
 
             Assert.IsNotNull(wkbList, "Returned WKB list is null.");
             Assert.IsGreaterThan(0, wkbList.Count, "Returned WKB list is empty.");

@@ -7,7 +7,6 @@ using GISBlox.Services.SDK;
 using GISBlox.Services.SDK.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,14 +44,13 @@ namespace GISBlox.MCP.Server.Tests
 
       #endregion
 
+      private static T? GetData<T>(McpToolOutput output) where T : class => output.Data as T;
+
       [TestMethod]
       public async Task ListTrackedMaps()
       {
          McpToolOutput result = await _mapAnalyticsTools.ListTrackedMaps(_client, CancellationToken.None);
-
-         Assert.IsNotNull(result);
-
-         var maps = result.Data as CustomerMapRecord;
+         CustomerMapRecord? maps = GetData<CustomerMapRecord>(result);
 
          Assert.IsNotNull(maps);
       }
@@ -64,9 +62,8 @@ namespace GISBlox.MCP.Server.Tests
          AnalyticsDateRangeEnum dateRange = AnalyticsDateRangeEnum.TwoWeeks;
 
          McpToolOutput result = await _mapAnalyticsTools.GetMapsKpis(_client, (int)dateRange, endDate.ToString("yyyy-MM-dd"), CancellationToken.None);
-         Assert.IsNotNull(result);
-
-         MapKpiRecord? kpis = result.Data as MapKpiRecord;
+         MapKpiRecord? kpis = GetData<MapKpiRecord>(result);
+         
          Assert.IsNotNull(kpis);
          
          Assert.AreEqual(dateRange.ToString(), kpis.DateRange);
@@ -92,9 +89,8 @@ namespace GISBlox.MCP.Server.Tests
          AnalyticsDateRangeEnum dateRange = AnalyticsDateRangeEnum.TwoWeeks;
 
          McpToolOutput result = await _mapAnalyticsTools.GetMapKpis(_client, mapId, (int)dateRange, endDate.ToString("yyyy-MM-dd"), CancellationToken.None);
-         Assert.IsNotNull(result);
-
-         MapKpiRecord? kpis = result.Data as MapKpiRecord;
+         MapKpiRecord? kpis = GetData<MapKpiRecord>(result);
+         
          Assert.IsNotNull(kpis);
 
          Assert.AreEqual(dateRange.ToString(), kpis.DateRange);
@@ -120,9 +116,8 @@ namespace GISBlox.MCP.Server.Tests
          AnalyticsDateRangeEnum dateRange = AnalyticsDateRangeEnum.ThreeWeeks;
 
          McpToolOutput result = await _mapAnalyticsTools.GetMapEngagement(_client, mapId, (int)dateRange, endDate.ToString("yyyy-MM-dd"), CancellationToken.None);
-         Assert.IsNotNull(result);
-
-         EngagementRecord? record = result.Data as EngagementRecord;
+         EngagementRecord? record = GetData<EngagementRecord>(result);
+         
          Assert.IsNotNull(record, "Response is empty.");
 
          Assert.AreEqual(mapId, record.MapId);

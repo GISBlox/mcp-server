@@ -44,16 +44,16 @@ namespace GISBlox.MCP.Server.Tests
 
       #endregion
 
+      private static T? GetData<T>(McpToolOutput output) where T : class => output.Data as T;
+
       [TestMethod]
       public async Task GetGemeente()
       {
          int gemeenteId = 307;
          string gemeenteNaam = "Amersfoort";
          McpToolOutput result = await _postalCodeAreaCodeHelperTools.GetGemeente(_client, gemeenteNaam, CancellationToken.None);
+         GWB? gemeente = GetData<GWB>(result);
 
-         Assert.IsNotNull(result);
-
-         GWB? gemeente = result.Data as GWB;
          Assert.IsNotNull(gemeente, "Response is empty.");
          Assert.AreEqual(gemeenteId, gemeente.ID);
 
@@ -64,10 +64,8 @@ namespace GISBlox.MCP.Server.Tests
       public async Task GetGemeenten()
       {
          McpToolOutput result = await _postalCodeAreaCodeHelperTools.GetGemeenten(_client, CancellationToken.None);
+         GWBRecord? record = GetData<GWBRecord>(result);
 
-         Assert.IsNotNull(result);
-
-         GWBRecord? record = result.Data as GWBRecord;
          Assert.IsNotNull(record, "Response is empty.");
          Assert.AreEqual(345, record.MetaData.TotalRecords);
 
@@ -79,10 +77,8 @@ namespace GISBlox.MCP.Server.Tests
       {
          int gemeenteIdAmersfoort = 307;
          McpToolOutput result = await _postalCodeAreaCodeHelperTools.GetWijkenByGemeenteId(_client, gemeenteIdAmersfoort, CancellationToken.None);
+         GWBRecord? record = GetData<GWBRecord>(result);
          
-         Assert.IsNotNull(result);
-
-         GWBRecord? record = result.Data as GWBRecord;
          Assert.IsNotNull(record, "Response is empty.");
          Assert.AreEqual(33, record.MetaData.TotalRecords);         
 
@@ -93,11 +89,10 @@ namespace GISBlox.MCP.Server.Tests
       public async Task GetWijkenByGemeenteName()
       {
          string gemeente = "Amersfoort";
-         McpToolOutput result = await _postalCodeAreaCodeHelperTools.GetWijkenByGemeenteName(_client, gemeente, CancellationToken.None);
          
-         Assert.IsNotNull(result);
+         McpToolOutput result = await _postalCodeAreaCodeHelperTools.GetWijkenByGemeenteName(_client, gemeente, CancellationToken.None);
+         GWBRecord? record = GetData<GWBRecord>(result);
 
-         GWBRecord? record = result.Data as GWBRecord;
          Assert.IsNotNull(record, "Response is empty.");
          Assert.AreEqual(33, record.MetaData.TotalRecords);
 
@@ -108,11 +103,10 @@ namespace GISBlox.MCP.Server.Tests
       public async Task GetBuurtenByWijkId()
       {
          int wijkId = 30701;
+         
          McpToolOutput result = await _postalCodeAreaCodeHelperTools.GetBuurtenByWijkId(_client, wijkId, CancellationToken.None);
-
-         Assert.IsNotNull(result);
-
-         GWBRecord? record = result.Data as GWBRecord;
+         GWBRecord? record = GetData<GWBRecord>(result);
+         
          Assert.IsNotNull(record, "Response is empty.");
          Assert.AreEqual(9, record.MetaData.TotalRecords);
 
@@ -132,11 +126,10 @@ namespace GISBlox.MCP.Server.Tests
       {
          int gemeenteIdAmersfoort = 307;
          int wijkIdStadskern = 30701;
-         McpToolOutput result = await _postalCodeAreaCodeHelperTools.GetBuurtenByGemeenteAndWijkIds(_client, gemeenteIdAmersfoort, wijkIdStadskern, CancellationToken.None);
          
-         Assert.IsNotNull(result, "Response is empty.");
-
-         GWBRecord? record = result.Data as GWBRecord;
+         McpToolOutput result = await _postalCodeAreaCodeHelperTools.GetBuurtenByGemeenteAndWijkIds(_client, gemeenteIdAmersfoort, wijkIdStadskern, CancellationToken.None);
+         GWBRecord? record = GetData<GWBRecord>(result);
+        
          Assert.IsNotNull(record, "Response is empty.");
          Assert.AreEqual(9, record.MetaData.TotalRecords);
 
@@ -156,11 +149,10 @@ namespace GISBlox.MCP.Server.Tests
       {
          string gemeente = "Amersfoort";
          string wijk = "Stadskern";
-         McpToolOutput result = await _postalCodeAreaCodeHelperTools.GetBuurtenByGemeenteAndWijkNames(_client, gemeente, wijk, CancellationToken.None);
          
-         Assert.IsNotNull(result, "Response is empty.");
-
-         GWBRecord? record = result.Data as GWBRecord;
+         McpToolOutput result = await _postalCodeAreaCodeHelperTools.GetBuurtenByGemeenteAndWijkNames(_client, gemeente, wijk, CancellationToken.None);
+         GWBRecord? record = GetData<GWBRecord>(result);
+         
          Assert.IsNotNull(record, "Response is empty.");
          Assert.AreEqual(9, record.MetaData.TotalRecords);
 
@@ -180,11 +172,10 @@ namespace GISBlox.MCP.Server.Tests
       {
          string gemeente = "Amersfoort";
          string wijk = "Stadskern";
-         McpToolOutput result = await _postalCodeAreaCodeHelperTools.GetBuurtenByGemeenteAndWijkNames(_client, gemeente, wijk, CancellationToken.None);
          
-         Assert.IsNotNull(result, "Response is empty.");
-
-         GWBRecord? record = result.Data as GWBRecord;
+         McpToolOutput result = await _postalCodeAreaCodeHelperTools.GetBuurtenByGemeenteAndWijkNames(_client, gemeente, wijk, CancellationToken.None);
+         GWBRecord? record = GetData<GWBRecord>(result);
+         
          Assert.IsNotNull(record, "Response is empty.");
          Assert.AreEqual(9, record.MetaData.TotalRecords);
 
@@ -198,7 +189,7 @@ namespace GISBlox.MCP.Server.Tests
 
          McpToolOutput resultCached = await _postalCodeAreaCodeHelperTools.GetBuurtenByGemeenteAndWijkNames(_client, gemeente, wijk, CancellationToken.None);
          Assert.IsNotNull(resultCached, "Response is empty.");
-         GWBRecord? recordCached = resultCached.Data as GWBRecord;
+         GWBRecord? recordCached = GetData<GWBRecord>(resultCached);
          Assert.IsNotNull(recordCached, "Response is empty.");
          Assert.AreEqual(9, recordCached.MetaData.TotalRecords);
 

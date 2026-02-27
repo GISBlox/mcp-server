@@ -44,6 +44,8 @@ namespace GISBlox.MCP.Server.Tests
 
       #endregion
 
+      private static T? GetData<T>(McpToolOutput output) where T : class => output.Data as T;
+
       #region ToRDS
 
       [TestMethod]
@@ -51,10 +53,9 @@ namespace GISBlox.MCP.Server.Tests
       {
          double lat = 51.998929, lon = 4.375587;
          
-         McpToolOutput result = await _projectionTools.ToRDSFromCoordinate(_client, lat, lon, CancellationToken.None);
-         Assert.IsNotNull(result, "Response is empty.");
+         McpToolOutput result = await _projectionTools.ToRDSFromCoordinate(_client, lat, lon, CancellationToken.None);         
+         RDPoint? rdPoint = GetData<RDPoint>(result);
 
-         RDPoint? rdPoint = result.Data as RDPoint;
          Assert.IsNotNull(rdPoint, "Response is empty.");
          Assert.IsTrue(rdPoint.X == 85530 && rdPoint.Y == 446100);
       }
@@ -64,10 +65,9 @@ namespace GISBlox.MCP.Server.Tests
       {
          double lat = 51.998929, lon = 4.375587;
          
-         McpToolOutput result = await _projectionTools.ToRDSFromCoordinateComplete(_client, lat, lon, CancellationToken.None);         
-         Assert.IsNotNull(result, "Response is empty.");
+         McpToolOutput result = await _projectionTools.ToRDSFromCoordinateComplete(_client, lat, lon, CancellationToken.None);   
+         Location? location = GetData<Location>(result);
 
-         Location? location = result.Data as Location;
          Assert.IsNotNull(location, "Response is empty.");
          Assert.IsTrue(location.X == 85530 && location.Y == 446100 && location.Lat == 51.998929 && location.Lon == 4.375587);
 
@@ -85,9 +85,8 @@ namespace GISBlox.MCP.Server.Tests
          ];
          
          McpToolOutput result = await _projectionTools.ToRDSFromCoordinateList(_client, coords, CancellationToken.None);
-         Assert.IsNotNull(result, "Response is empty.");
+         List<RDPoint>? rdPoints = GetData<List<RDPoint>>(result);
 
-         List<RDPoint>? rdPoints = result.Data as List<RDPoint>;
          Assert.IsNotNull(rdPoints, "Response is empty.");
          Assert.IsTrue(rdPoints[0].X == 85530 && rdPoints[0].Y == 446100);
          Assert.IsTrue(rdPoints[1].X == 75483 && rdPoints[1].Y == 568787);
@@ -106,10 +105,9 @@ namespace GISBlox.MCP.Server.Tests
             [53.11, 4.3]
          ];
          
-         McpToolOutput result = await _projectionTools.ToRDSFromCoordinateListComplete(_client, coords, CancellationToken.None);         
-         Assert.IsNotNull(result, "Response is empty.");
+         McpToolOutput result = await _projectionTools.ToRDSFromCoordinateListComplete(_client, coords, CancellationToken.None);  
+         List<Location>? loc = GetData<List<Location>>(result);
 
-         List<Location>? loc = result.Data as List<Location>;
          Assert.IsNotNull(loc, "Response is empty.");
          Assert.IsTrue(loc[0].X == 85530 && loc[0].Y == 446100 && loc[0].Lat == 51.998929 && loc[0].Lon == 4.375587);
          Assert.IsTrue(loc[1].X == 75483 && loc[1].Y == 568787 && loc[1].Lat == 53.1 && loc[1].Lon == 4.2);
@@ -128,9 +126,8 @@ namespace GISBlox.MCP.Server.Tests
          int x = 85530, y = 446100;
          
          McpToolOutput result = await _projectionTools.ToWGS84FromRDPoint(_client, x, y, 6, CancellationToken.None);        // Round the coordinate to 6 digits
-         Assert.IsNotNull(result, "Response is empty.");
+         Coordinate? coord = GetData<Coordinate>(result);
 
-         Coordinate? coord = result.Data as Coordinate;
          Assert.IsNotNull(coord, "Response is empty.");
          Assert.IsTrue(coord.Lat == 51.998927 && coord.Lon == 4.375584);
       }
@@ -141,9 +138,7 @@ namespace GISBlox.MCP.Server.Tests
          int x = 85530, y = 446100;
         
          McpToolOutput result = await _projectionTools.ToWGS84FromRDPointComplete(_client, x, y, -1, CancellationToken.None);  // No rounding
-         Assert.IsNotNull(result, "Response is empty.");
-
-         Location? location = result.Data as Location;
+         Location? location = GetData<Location>(result);
 
          Assert.IsNotNull(location, "Response is empty.");
          Assert.IsTrue(location.Lat == 51.998927449317591 && location.Lon == 4.3755841993518345 && location.X == 85530 && location.Y == 446100);
@@ -162,9 +157,8 @@ namespace GISBlox.MCP.Server.Tests
          ];
          
          McpToolOutput result = await _projectionTools.ToWGS84FromRDPointList(_client, points, -1, CancellationToken.None);   // No rounding
-         Assert.IsNotNull(result, "Response is empty.");
-
-         List<Coordinate>? coords = result.Data as List<Coordinate>;
+         List<Coordinate>? coords = GetData<List<Coordinate>>(result);
+         
          Assert.IsNotNull(coords, "Response is empty.");         
 
          Assert.IsTrue(coords[0].Lat == 52.9791861737104 && coords[0].Lon == 4.56833613045079);
@@ -185,9 +179,7 @@ namespace GISBlox.MCP.Server.Tests
          ];
         
          McpToolOutput result = await _projectionTools.ToWGS84FromRDPointListComplete(_client, points, 5, CancellationToken.None);   // Round the coordinates to 5 digits         
-         Assert.IsNotNull(result, "Response is empty.");
-
-         List<Location>? coords = result.Data as List<Location>;
+         List<Location>? coords = GetData<List<Location>>(result);
 
          Assert.IsNotNull(coords, "Response is empty.");
          Assert.IsTrue(coords[0].Lat == 52.97919 && coords[0].Lon == 4.56834 && coords[0].X == 100000 && coords[0].Y == 555000);

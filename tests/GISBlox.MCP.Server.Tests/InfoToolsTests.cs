@@ -42,14 +42,13 @@ namespace GISBlox.MCP.Server.Tests
 
       #endregion
 
+      private static T? GetData<T>(McpToolOutput output) where T : class => output.Data as T;
+
       [TestMethod]
       public async Task GetSubscriptionInfo()
       {
          McpToolOutput result = await _infoTools.GetSubscriptions(_client, CancellationToken.None);
-         
-         Assert.IsNotNull(result);
-
-         var subscriptions = result.Data as List<Subscription>;
+         var subscriptions = GetData<List<Subscription>>(result);
 
          subscriptions?.ForEach(sub =>
              Console.WriteLine($"\r\nName: {sub.Name} \r\nDescription: {sub.Description} \r\nRegistration date: {sub.RegisterDate} Expiration date: {sub.ExpirationDate} Expired: {sub.Expired}"));
