@@ -9,7 +9,7 @@ namespace GISBlox.MCP.Server.Helpers
    public static class ToolParameterHelper
    {
       /// <summary>
-      /// Extracts parameter names and values, and returns them as a dynamic object containing key-value pairs.
+      /// Extracts tool parameter names and values, and returns them as a dynamic object containing key-value pairs.
       /// </summary>      
       /// <param name="parameters">The parameters to process.</param>
       /// <returns>A dynamic object representing the parameters as key-value pairs.</returns>
