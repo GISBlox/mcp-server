@@ -13,22 +13,22 @@
     <!-- Set recommended package metadata -->
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageId>GISBlox.MCP.Server</PackageId>
-    <PackageVersion>1.0.9</PackageVersion>
+    <PackageVersion>1.1.0</PackageVersion>
     <PackageTags>AI; MCP; server; GISBlox</PackageTags>
     <Description>GISBlox Model Context Protocol (MCP) server</Description>
     <Title>GISBlox MCP Server</Title>
     <Company>Bartels Online</Company>
     <Authors>Karlo Bartels</Authors>
     <PackageProjectUrl>https://github.com/GISBlox/mcp-server</PackageProjectUrl>
-    <Version>1.0.9</Version>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
   <!-- Include additional files for browsing the MCP server. -->
 
   <ItemGroup>
     <PackageReference Include="GISBlox.Services.SDK" Version="2.6.2" />
-    <PackageReference Include="ModelContextProtocol" Version="0.4.0-preview.3" />
-    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.4.0-preview.3" />
+    <PackageReference Include="ModelContextProtocol" Version="1.0.0" />
+    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>

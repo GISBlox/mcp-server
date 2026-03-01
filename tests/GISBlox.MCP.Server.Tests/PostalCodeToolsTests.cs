@@ -2,6 +2,7 @@
 // Copyright(c) Bartels Online. All rights reserved.
 // ----------------------------------------------------
 
+using GISBlox.MCP.Server.ToolBase;
 using GISBlox.Services.SDK;
 using GISBlox.Services.SDK.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -17,8 +18,11 @@ namespace GISBlox.MCP.Server.Tests
    public class PostalCodeToolsTests
    {
       private GISBloxClient _client = null!;
+      private PostalCodeTools _postalCodeTools = null!;
 
       const int API_QUOTA_DELAY = 1000;  // Allows to run all tests together without exceeding API call quota
+
+      private static T? GetData<T>(McpToolOutput output) where T : class => output.Data as T;
 
       #region Initialization and cleanup
 
@@ -29,6 +33,7 @@ namespace GISBlox.MCP.Server.Tests
          var serviceUrl = Environment.GetEnvironmentVariable("GISBLOX_SERVICE_URL") ?? "https://services.gisblox.com";
 
          _client = GISBloxClient.CreateClient(serviceUrl, serviceKey, applicationName: "GISBlox.MCP.Server.Tests");
+         _postalCodeTools = new PostalCodeTools();
       }
 
       [TestCleanup]
@@ -48,7 +53,9 @@ namespace GISBlox.MCP.Server.Tests
       public async Task GetPostalCode4Record()
       {
          string id = "3811";
-         PostalCode4Record? record = await PostalCodeTools.GetPostalCodeRecord(_client, id, cancellationToken: CancellationToken.None) as PostalCode4Record;
+
+         var result = await _postalCodeTools.GetPostalCodeRecord(_client, id, cancellationToken: CancellationToken.None);
+         PostalCode4Record? record = GetData<PostalCode4Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
 
@@ -63,14 +70,17 @@ namespace GISBlox.MCP.Server.Tests
       public async Task GetPostalCode4RecordCached()
       {
          string id = "3811";
-         PostalCode4Record? record = await PostalCodeTools.GetPostalCodeRecord(_client, id, cancellationToken: CancellationToken.None) as PostalCode4Record;
+
+         var result = await _postalCodeTools.GetPostalCodeRecord(_client, id, cancellationToken: CancellationToken.None);
+         PostalCode4Record? record = GetData<PostalCode4Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
 
          PostalCode4 pc = record.PostalCode[0];
          Assert.IsTrue(pc.Location.Gemeente == "Amersfoort" && pc.Location.Geometry.Centroid == "POINT (155029 463048)");
 
-         PostalCode4Record? recordCached = await PostalCodeTools.GetPostalCodeRecord(_client, id, cancellationToken: CancellationToken.None) as PostalCode4Record;
+         var cachedOutput = await _postalCodeTools.GetPostalCodeRecord(_client, id, cancellationToken: CancellationToken.None);
+         PostalCode4Record? recordCached = GetData<PostalCode4Record>(cachedOutput);
 
          Assert.IsNotNull(recordCached, "Response is empty.");
          Assert.AreEqual(recordCached.MetaData.Query, record.MetaData.Query);
@@ -83,7 +93,9 @@ namespace GISBlox.MCP.Server.Tests
       {
          string id = "3811";
          bool includeSource = false;
-         PostalCode4Record? record = await PostalCodeTools.GetPostalCodeNeighbours(_client, id, includeSource, cancellationToken: CancellationToken.None) as PostalCode4Record;
+
+         var result = await _postalCodeTools.GetPostalCodeNeighbours(_client, id, includeSource, cancellationToken: CancellationToken.None);
+         PostalCode4Record? record = GetData<PostalCode4Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
          Assert.HasCount(6, record.PostalCode);
@@ -99,7 +111,9 @@ namespace GISBlox.MCP.Server.Tests
       {
          string id = "3811";
          bool includeSource = true;
-         PostalCode4Record? record = await PostalCodeTools.GetPostalCodeNeighbours(_client, id, includeSource, cancellationToken: CancellationToken.None) as PostalCode4Record;
+
+         var result = await _postalCodeTools.GetPostalCodeNeighbours(_client, id, includeSource, cancellationToken: CancellationToken.None);
+         PostalCode4Record? record = GetData<PostalCode4Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
          Assert.HasCount(7, record.PostalCode);
@@ -117,7 +131,9 @@ namespace GISBlox.MCP.Server.Tests
          string id = "3811";
          bool includeSource = true;
          bool includeWktGeometries = true;
-         PostalCode4Record? record = await PostalCodeTools.GetPostalCodeNeighbours(_client, id, includeSource, 28992, includeWktGeometries, CancellationToken.None) as PostalCode4Record;
+
+         var result = await _postalCodeTools.GetPostalCodeNeighbours(_client, id, includeSource, 28992, includeWktGeometries, CancellationToken.None);
+         PostalCode4Record? record = GetData<PostalCode4Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
          Assert.HasCount(7, record.PostalCode);
@@ -134,7 +150,9 @@ namespace GISBlox.MCP.Server.Tests
       public async Task GetPostalCode4ByGeometry()
       {
          string wkt = "LINESTRING(109935 561725, 110341 564040, 111430 565908)";
-         PostalCode4Record? record = await PostalCodeTools.GetPostalCodeByGeometry(_client, wkt, cancellationToken: CancellationToken.None) as PostalCode4Record;
+
+         var result = await _postalCodeTools.GetPostalCodeByGeometry(_client, wkt, cancellationToken: CancellationToken.None);
+         PostalCode4Record? record = GetData<PostalCode4Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
          Assert.HasCount(3, record.PostalCode);
@@ -150,7 +168,9 @@ namespace GISBlox.MCP.Server.Tests
       {
          string wkt = "LINESTRING(109935 561725, 110341 564040, 111430 565908)";
          int buffer = 5000;    // meters, since CS of WKT is 28992.
-         PostalCode4Record? record = await PostalCodeTools.GetPostalCodeByGeometry(_client, wkt, buffer, cancellationToken: CancellationToken.None) as PostalCode4Record;
+
+         var result = await _postalCodeTools.GetPostalCodeByGeometry(_client, wkt, buffer, cancellationToken: CancellationToken.None);
+         PostalCode4Record? record = GetData<PostalCode4Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
          Assert.HasCount(5, record.PostalCode);
@@ -166,7 +186,9 @@ namespace GISBlox.MCP.Server.Tests
       {
          string wkt = "POINT(121843 487293)";
          int buffer = 200;   // meters, since CS of WKT is 28992.
-         PostalCode4Record? record = await PostalCodeTools.GetPostalCodeByGeometry(_client, wkt, buffer, (int)CoordinateSystem.RDNew, (int)CoordinateSystem.WGS84, cancellationToken: CancellationToken.None) as PostalCode4Record;
+         
+         var result = await _postalCodeTools.GetPostalCodeByGeometry(_client, wkt, buffer, (int)CoordinateSystem.RDNew, (int)CoordinateSystem.WGS84, cancellationToken: CancellationToken.None);
+         PostalCode4Record? record = GetData<PostalCode4Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
          Assert.HasCount(2, record.PostalCode);
@@ -189,7 +211,8 @@ namespace GISBlox.MCP.Server.Tests
 
          string expectedPostalCode = "2809";
 
-         PostalCode4Record? record = await PostalCodeTools.GetPostalCodeByArea(_client, gemeenteId, wijkId, cancellationToken: CancellationToken.None) as PostalCode4Record;
+         var result = await _postalCodeTools.GetPostalCodeByArea(_client, gemeenteId, wijkId, cancellationToken: CancellationToken.None);
+         PostalCode4Record? record = GetData<PostalCode4Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
 
@@ -213,7 +236,8 @@ namespace GISBlox.MCP.Server.Tests
 
          string expectedPostalCode = "2809";
 
-         PostalCode4Record? record = await PostalCodeTools.GetPostalCodeByArea(_client, gemeenteId, wijkId, includeWktGeometries: true, cancellationToken: CancellationToken.None) as PostalCode4Record;
+         var result = await _postalCodeTools.GetPostalCodeByArea(_client, gemeenteId, wijkId, includeWktGeometries: true, cancellationToken: CancellationToken.None);
+         PostalCode4Record? record = GetData<PostalCode4Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
 
@@ -230,7 +254,9 @@ namespace GISBlox.MCP.Server.Tests
       public async Task GetKeyFigures4()
       {
          string id = "3811";
-         KerncijferRecord record = await PostalCodeTools.GetKeyFigures(_client, id, CancellationToken.None);
+         
+         var result = await _postalCodeTools.GetKeyFigures(_client, id, CancellationToken.None);
+         KerncijferRecord? record = GetData<KerncijferRecord>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
          Assert.AreEqual(37, record.MetaData.TotalAttributes);
@@ -246,7 +272,9 @@ namespace GISBlox.MCP.Server.Tests
       public async Task GetPostalCode6Record()
       {
          string id = "3811CJ";
-         PostalCode6Record? record = await PostalCodeTools.GetPostalCodeRecord(_client, id, cancellationToken: CancellationToken.None) as PostalCode6Record;
+         
+         var result = await _postalCodeTools.GetPostalCodeRecord(_client, id, cancellationToken: CancellationToken.None);
+         PostalCode6Record? record = GetData<PostalCode6Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
 
@@ -262,7 +290,9 @@ namespace GISBlox.MCP.Server.Tests
       {
          string id = "3069BS";
          bool includeSource = false;
-         PostalCode6Record? record = await PostalCodeTools.GetPostalCodeNeighbours(_client, id, includeSource, cancellationToken: CancellationToken.None) as PostalCode6Record;
+         
+         var result = await _postalCodeTools.GetPostalCodeNeighbours(_client, id, includeSource, cancellationToken: CancellationToken.None);
+         PostalCode6Record? record = GetData<PostalCode6Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
          Assert.HasCount(7, record.PostalCode);
@@ -278,7 +308,9 @@ namespace GISBlox.MCP.Server.Tests
       {
          string id = "3069BS";
          bool includeSource = true;
-         PostalCode6Record? record = await PostalCodeTools.GetPostalCodeNeighbours(_client, id, includeSource, cancellationToken: CancellationToken.None) as PostalCode6Record;
+         
+         var result = await _postalCodeTools.GetPostalCodeNeighbours(_client, id, includeSource, cancellationToken: CancellationToken.None);
+         PostalCode6Record? record = GetData<PostalCode6Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
          Assert.HasCount(8, record.PostalCode);
@@ -296,7 +328,9 @@ namespace GISBlox.MCP.Server.Tests
          string id = "3069BS";
          bool includeSource = true;
          bool includeGeometries = true;
-         PostalCode6Record? record = await PostalCodeTools.GetPostalCodeNeighbours(_client, id, includeSource, 28992, includeGeometries, CancellationToken.None) as PostalCode6Record;
+         
+         var result = await _postalCodeTools.GetPostalCodeNeighbours(_client, id, includeSource, 28992, includeGeometries, CancellationToken.None);
+         PostalCode6Record? record = GetData<PostalCode6Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
          Assert.HasCount(8, record.PostalCode);
@@ -312,7 +346,9 @@ namespace GISBlox.MCP.Server.Tests
       public async Task GetPostalCode6ByGeometry()
       {
          string wkt = "LINESTRING(109935 561725, 110341 564040, 111430 565908)";
-         PostalCode6Record? record = await PostalCodeTools.GetPostalCodeByGeometry(_client, wkt, streetLevelPostCodes: true, cancellationToken: CancellationToken.None) as PostalCode6Record;
+         
+         var result = await _postalCodeTools.GetPostalCodeByGeometry(_client, wkt, streetLevelPostCodes: true, cancellationToken: CancellationToken.None);
+         PostalCode6Record? record = GetData<PostalCode6Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
          Assert.HasCount(3, record.PostalCode);
@@ -328,7 +364,9 @@ namespace GISBlox.MCP.Server.Tests
       {
          string wkt = "LINESTRING(109935 561725, 110341 564040, 111430 565908)";
          int buffer = 750;    // meters, since CS of WKT is 28992.
-         PostalCode6Record? record = await PostalCodeTools.GetPostalCodeByGeometry(_client, wkt, buffer, streetLevelPostCodes: true, cancellationToken: CancellationToken.None) as PostalCode6Record;
+         
+         var result = await _postalCodeTools.GetPostalCodeByGeometry(_client, wkt, buffer, streetLevelPostCodes: true, cancellationToken: CancellationToken.None);
+         PostalCode6Record? record = GetData<PostalCode6Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
          Assert.HasCount(6, record.PostalCode);
@@ -344,7 +382,9 @@ namespace GISBlox.MCP.Server.Tests
       {
          string wkt = "POINT(121843 487293)";
          int buffer = 50;   // meters, since CS of WKT is 28992.
-         PostalCode6Record? record = await PostalCodeTools.GetPostalCodeByGeometry(_client, wkt, buffer, (int)CoordinateSystem.RDNew, (int)CoordinateSystem.WGS84, streetLevelPostCodes: true, cancellationToken: CancellationToken.None) as PostalCode6Record;
+         
+         var result = await _postalCodeTools.GetPostalCodeByGeometry(_client, wkt, buffer, (int)CoordinateSystem.RDNew, (int)CoordinateSystem.WGS84, streetLevelPostCodes: true, cancellationToken: CancellationToken.None);
+         PostalCode6Record? record = GetData<PostalCode6Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
          Assert.HasCount(12, record.PostalCode);
@@ -370,7 +410,8 @@ namespace GISBlox.MCP.Server.Tests
 
          string expectedPostalCode = "2809RA";
 
-         PostalCode6Record? record = await PostalCodeTools.GetPostalCodeByArea(_client, gemeenteId, wijkId, buurtId, (int)CoordinateSystem.WGS84, streetLevelPostCodes: true, cancellationToken: CancellationToken.None) as PostalCode6Record;
+         var result = await _postalCodeTools.GetPostalCodeByArea(_client, gemeenteId, wijkId, buurtId, (int)CoordinateSystem.WGS84, streetLevelPostCodes: true, cancellationToken: CancellationToken.None);
+         PostalCode6Record? record = GetData<PostalCode6Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
 
@@ -398,7 +439,8 @@ namespace GISBlox.MCP.Server.Tests
 
          string expectedPostalCode = "2809RA";
 
-         PostalCode6Record? record = await PostalCodeTools.GetPostalCodeByArea(_client, gemeenteId, wijkId, buurtId, (int)CoordinateSystem.WGS84, streetLevelPostCodes: true, includeWktGeometries: true, cancellationToken: CancellationToken.None) as PostalCode6Record;
+         var result = await _postalCodeTools.GetPostalCodeByArea(_client, gemeenteId, wijkId, buurtId, (int)CoordinateSystem.WGS84, streetLevelPostCodes: true, includeWktGeometries: true, cancellationToken: CancellationToken.None);
+         PostalCode6Record? record = GetData<PostalCode6Record>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
 
@@ -416,7 +458,9 @@ namespace GISBlox.MCP.Server.Tests
       public async Task GetKeyFigures6()
       {
          string id = "3811BB";
-         KerncijferRecord record = await PostalCodeTools.GetKeyFigures(_client, id, CancellationToken.None);
+         
+         var result = await _postalCodeTools.GetKeyFigures(_client, id, CancellationToken.None);
+         KerncijferRecord? record = GetData<KerncijferRecord>(result);
 
          Assert.IsNotNull(record, "Response is empty.");
          Assert.AreEqual(35, record.MetaData.TotalAttributes);

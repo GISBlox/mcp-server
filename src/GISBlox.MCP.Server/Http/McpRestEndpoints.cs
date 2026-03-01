@@ -2,6 +2,7 @@
 // Copyright(c) Bartels Online. All rights reserved.
 // ----------------------------------------------------
 
+using GISBlox.MCP.Server.Helpers;
 using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -15,18 +16,21 @@ internal static partial class McpRestEndpointsExtensions
    // Mapping from safe tool name -> full method name for invocation resolution.
    private static readonly Dictionary<string, string> _toolNameMap = new(StringComparer.OrdinalIgnoreCase);
    private static readonly Lock _toolMapLock = new();
-    
+
+   [GeneratedRegex("[^a-zA-Z0-9_-]")]
+   private static partial Regex ValidToolNameRegEx();
+
    internal static async Task<object?> JsonRpcEntryAsync(HttpContext ctx)
    {
       try
       {
-         using var doc = await JsonDocument.ParseAsync(ctx.Request.Body, cancellationToken: ctx.RequestAborted);
-         var root = doc.RootElement;
+         using JsonDocument doc = await JsonDocument.ParseAsync(ctx.Request.Body, cancellationToken: ctx.RequestAborted);
+         JsonElement root = doc.RootElement;
 
          if (root.ValueKind == JsonValueKind.Array)
          {
             var responses = new List<object?>();
-            foreach (var item in root.EnumerateArray())
+            foreach (JsonElement item in root.EnumerateArray())
             {
                responses.Add(await HandleSingleAsync(item, ctx.RequestServices, ctx.RequestAborted));
             }
@@ -44,11 +48,11 @@ internal static partial class McpRestEndpointsExtensions
 
    public static IEndpointRouteBuilder MapMcpJsonRpc(this IEndpointRouteBuilder app, string path = "/mcp")
    {
-      var trimmed = TrimEndSlash(path);
+      string trimmed = TrimEndSlash(path);
 
       app.MapPost(trimmed, async (HttpContext ctx, IServiceProvider sp) =>
       {
-         var result = await JsonRpcEntryAsync(ctx);
+         object? result = await JsonRpcEntryAsync(ctx);
          return Results.Json(result, JsonOptions);
       });
 
@@ -64,17 +68,17 @@ internal static partial class McpRestEndpointsExtensions
 
       object? id = ExtractId(elem);
 
-      if (!elem.TryGetProperty("jsonrpc", out var jsonrpcProp) || jsonrpcProp.GetString() != "2.0")
+      if (!elem.TryGetProperty("jsonrpc", out JsonElement jsonrpcProp) || jsonrpcProp.GetString() != "2.0")
       {
          return JsonRpcError(id, -32600, "Invalid Request", "Missing or invalid jsonrpc version.");
       }
 
-      if (!elem.TryGetProperty("method", out var methodProp) || methodProp.ValueKind != JsonValueKind.String)
+      if (!elem.TryGetProperty("method", out JsonElement methodProp) || methodProp.ValueKind != JsonValueKind.String)
       {
          return JsonRpcError(id, -32600, "Invalid Request", "Missing method.");
       }
 
-      var methodName = methodProp.GetString()!;
+      string methodName = methodProp.GetString()!;
       bool hasParams = elem.TryGetProperty("params", out JsonElement @params);
 
       try
@@ -85,12 +89,12 @@ internal static partial class McpRestEndpointsExtensions
                {
                   string requestedProtocol = "2025-05-01";
                   if (hasParams && @params.ValueKind == JsonValueKind.Object &&
-                      @params.TryGetProperty("protocolVersion", out var pvProp) && pvProp.ValueKind == JsonValueKind.String)
+                      @params.TryGetProperty("protocolVersion", out JsonElement pvProp) && pvProp.ValueKind == JsonValueKind.String)
                   {
                      requestedProtocol = pvProp.GetString() ?? requestedProtocol;
                   }
 
-                  var asm = Assembly.GetExecutingAssembly().GetName();
+                  AssemblyName asm = Assembly.GetExecutingAssembly().GetName();
                   var serverInfo = new
                   {
                      name = "@gisblox/mcp-server",
@@ -127,14 +131,14 @@ internal static partial class McpRestEndpointsExtensions
                }
             case "tools/list":
                {
-                  var descriptors = ToolCatalog.GetDescriptors();
+                  IReadOnlyList<ToolDescriptorDto> descriptors = McpToolCatalog.GetDescriptors();
 
-                  var duplicates = descriptors
+                  Dictionary<string, bool> duplicates = descriptors
                       .GroupBy(d => d.Name, StringComparer.OrdinalIgnoreCase)
                       .Where(g => g.Count() > 1)
                       .ToDictionary(g => g.Key, _ => true, StringComparer.OrdinalIgnoreCase);
 
-                  var usedSafeNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                  HashSet<string> usedSafeNames = new(StringComparer.OrdinalIgnoreCase);
                   _toolNameMap.Clear();
 
                   var tools = descriptors.Select(d =>
@@ -146,8 +150,8 @@ internal static partial class McpRestEndpointsExtensions
                         int i = 2;
                         while (true)
                         {
-                           var candidate = safe;
-                           var suffix = "_" + i.ToString();
+                           string candidate = safe;
+                           string suffix = "_" + i.ToString();
                            if (candidate.Length + suffix.Length > 64)
                            {
                               candidate = candidate[..Math.Max(1, 64 - suffix.Length)];
@@ -175,7 +179,7 @@ internal static partial class McpRestEndpointsExtensions
                      var required = new List<string>();
                      foreach (var p in d.Parameters)
                      {
-                        var schemaType = MapParameterTypeToJsonSchemaType(p.Type);
+                        string schemaType = MapParameterTypeToJsonSchemaType(p.Type);
                         var paramDef = new Dictionary<string, object> { ["type"] = schemaType };
                         
                         // Add items schema for array types
@@ -213,7 +217,8 @@ internal static partial class McpRestEndpointsExtensions
                      {
                         ["name"] = safe,
                         ["description"] = d.Description ?? string.Empty,
-                        ["inputSchema"] = inputSchema
+                        ["inputSchema"] = inputSchema,
+                        ["output"] = McpSchemaHelper.CreateStandardOutputSchema()
                      };
 
                      // Add category if available
@@ -250,7 +255,7 @@ internal static partial class McpRestEndpointsExtensions
                   string toolName = nameProp.GetString()!;
 
                   // Only resolve by the Name from the attribute
-                  if (_toolNameMap.TryGetValue(toolName, out var canonicalName))
+                  if (_toolNameMap.TryGetValue(toolName, out string? canonicalName))
                   {
                      toolName = canonicalName;
                   }
@@ -270,15 +275,15 @@ internal static partial class McpRestEndpointsExtensions
                      }
                   }
 
-                  var invokeReq = new InvokeRequest
+                  InvokeRequest invokeReq = new()
                   {
                      Name = toolName,
                      Arguments = arguments
                   };
 
-                  var invokeResult = await ToolCatalog.InvokeAsync(invokeReq, sp, ct);
+                  object? invokeResult = await McpToolCatalog.InvokeAsync(invokeReq, sp, ct);
 
-                  var formatted = FormatToolResult(invokeResult);
+                  object[] formatted = FormatToolResult(invokeResult);
                   return JsonRpcResult(id, new { content = formatted, isError = false });
                }
 
@@ -322,18 +327,18 @@ internal static partial class McpRestEndpointsExtensions
       {
          if (_toolNameMap.Count != 0) return;
 
-         var descriptors = ToolCatalog.GetDescriptors();
-         var seenSafe = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+         IReadOnlyList<ToolDescriptorDto> descriptors = McpToolCatalog.GetDescriptors();
+         HashSet<string> seenSafe = new(StringComparer.OrdinalIgnoreCase);
 
          foreach (var d in descriptors)
          {
-            var canonical = d.Name;
+            string canonical = d.Name;
             if (!string.IsNullOrWhiteSpace(canonical))
             {
                _toolNameMap[canonical] = canonical;
             }
 
-            var safe = SanitizeToolName(canonical);
+            string safe = SanitizeToolName(canonical);
             if (!string.IsNullOrEmpty(safe) && seenSafe.Add(safe))
             {
                _toolNameMap[safe] = canonical;
@@ -357,7 +362,7 @@ internal static partial class McpRestEndpointsExtensions
 
    private static string SanitizeToolName(string value)
    {
-      var sanitized = Regex.Replace(value, "[^a-zA-Z0-9_-]", "_");
+      string sanitized = ValidToolNameRegEx().Replace(value, "_");
       if (sanitized.Length == 0) sanitized = "tool";
       if (sanitized.Length > 64) sanitized = sanitized[..64];
       return sanitized;
@@ -365,7 +370,7 @@ internal static partial class McpRestEndpointsExtensions
 
    private static string MapParameterTypeToJsonSchemaType(string type)
    {
-      var t = type.TrimEnd('?');
+      string t = type.TrimEnd('?');
       
       // Handle array types
       if (t.EndsWith("[][]"))
@@ -391,13 +396,14 @@ internal static partial class McpRestEndpointsExtensions
 
    private static Dictionary<string, object>? GetJsonSchemaItemsType(string type)
    {
-      var t = type.TrimEnd('?');
+      string t = type.TrimEnd('?');
 
       if (t.EndsWith("[][]"))
       {
          // 2D array -> items are arrays
-         var elementType = t[..^4]; // Remove [][]
-         var itemsElementType = MapParameterTypeToJsonSchemaType(elementType);
+         string elementType = t[..^4]; // Remove [][]
+         string itemsElementType = MapParameterTypeToJsonSchemaType(elementType);
+
          return new Dictionary<string, object>
          {
             ["type"] = "array",
@@ -411,7 +417,8 @@ internal static partial class McpRestEndpointsExtensions
       if (t.EndsWith("[]"))
       {
          // 1D array
-         var elementType = t[..^2]; // Remove []
+         string elementType = t[..^2]; // Remove []
+
          return new Dictionary<string, object>
          {
             ["type"] = MapParameterTypeToJsonSchemaType(elementType)
@@ -446,7 +453,7 @@ internal static partial class McpRestEndpointsExtensions
       return idProp.ValueKind switch
       {
          JsonValueKind.String => idProp.GetString(),
-         JsonValueKind.Number => idProp.TryGetInt64(out var l) ? l : idProp.GetDouble(),
+         JsonValueKind.Number => idProp.TryGetInt64(out long l) ? l : idProp.GetDouble(),
          JsonValueKind.Null => null,
          _ => null
       };
@@ -473,5 +480,5 @@ internal static partial class McpRestEndpointsExtensions
    {
       public string Name { get; set; } = string.Empty;
       public Dictionary<string, JsonElement>? Arguments { get; set; }
-   }
+   }  
 }

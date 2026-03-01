@@ -11,7 +11,7 @@ namespace GISBlox.MCP.Server.Http;
 
 internal static partial class McpRestEndpointsExtensions
 {
-   private static class ToolCatalog
+   private static class McpToolCatalog
    {
       private static bool _initialized;
       private static readonly Lock _lock = new();
@@ -61,11 +61,8 @@ internal static partial class McpRestEndpointsExtensions
       {
          EnsureInitialized();
 
-         var match = ResolveMethod(request.Name);
-         if (match is null)
-            throw new InvalidOperationException($"Tool '{request.Name}' was not found.");
-
-         var (type, method, _) = match.Value;
+         (Type, MethodInfo, ToolDescriptorDto) match = ResolveMethod(request.Name) ?? throw new InvalidOperationException($"Tool '{request.Name}' was not found.");
+         var (type, method, _) = match;
 
          // Prepare instance if method is instance-based
          object? target = null;

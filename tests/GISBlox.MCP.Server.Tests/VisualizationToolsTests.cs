@@ -2,6 +2,7 @@
 // Copyright(c) Bartels Online. All rights reserved.
 // ----------------------------------------------------
 
+using GISBlox.MCP.Server.ToolBase;
 using GISBlox.Services.SDK;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -15,6 +16,9 @@ namespace GISBlox.MCP.Server.Tests
    public class VisualizationToolsTests
    {
       private GISBloxClient _client = null!;
+      private VisualizationTools _visualizationTools = null!;
+      
+      private static T? GetData<T>(McpToolOutput output) where T : class => output.Data as T;
 
       #region Initialization and cleanup
 
@@ -25,6 +29,7 @@ namespace GISBlox.MCP.Server.Tests
          var serviceUrl = Environment.GetEnvironmentVariable("GISBLOX_SERVICE_URL") ?? "https://services.gisblox.com";
 
          _client = GISBloxClient.CreateClient(serviceUrl, serviceKey, applicationName: "GISBlox.MCP.Server.Tests");
+         _visualizationTools = new VisualizationTools();
       }
 
       [TestCleanup]
@@ -44,7 +49,9 @@ namespace GISBlox.MCP.Server.Tests
       public async Task VisualizePostalCode4()
       {
          string id = "3069";
-         string url = await VisualizationTools.VisualizePostalCode(_client, id, CancellationToken.None);
+
+         var result = await _visualizationTools.VisualizePostalCode(_client, id, CancellationToken.None);
+         string? url = GetData<string>(result);
 
          Assert.IsFalse(string.IsNullOrWhiteSpace(url), "Response is empty.");
 
@@ -56,7 +63,9 @@ namespace GISBlox.MCP.Server.Tests
       public async Task VisualizePostalCode4Neighbours()
       {
          string id = "2809";
-         string url = await VisualizationTools.VisualizePostalCodeNeighbours(_client, id, CancellationToken.None);
+         
+         var result = await _visualizationTools.VisualizePostalCodeNeighbours(_client, id, CancellationToken.None);
+         string? url = GetData<string>(result);
 
          Assert.IsFalse(string.IsNullOrWhiteSpace(url), "Response is empty.");
 
@@ -72,7 +81,9 @@ namespace GISBlox.MCP.Server.Tests
       public async Task VisualizePostalCode6()
       {
          string id = "2809RA";
-         string url = await VisualizationTools.VisualizePostalCode(_client, id, CancellationToken.None);
+         
+         var result = await _visualizationTools.VisualizePostalCode(_client, id, CancellationToken.None);
+         string? url = GetData<string>(result);
 
          Assert.IsFalse(string.IsNullOrWhiteSpace(url), "Response is empty.");
 
@@ -84,7 +95,9 @@ namespace GISBlox.MCP.Server.Tests
       public async Task VisualizePostalCode6Neighbours()
       {
          string id = "2809RA";
-         string url = await VisualizationTools.VisualizePostalCodeNeighbours(_client, id, CancellationToken.None);
+         
+         var result = await _visualizationTools.VisualizePostalCodeNeighbours(_client, id, CancellationToken.None);
+         string? url = GetData<string>(result);
 
          Assert.IsFalse(string.IsNullOrWhiteSpace(url), "Response is empty.");
 
@@ -100,7 +113,9 @@ namespace GISBlox.MCP.Server.Tests
       public void OpenInZipChatCopilot()
       {
          string id = "2809RA";
-         string url = VisualizationTools.AskZipChatCopilot(id);
+
+         McpToolOutput result = _visualizationTools.AskZipChatCopilot(id);
+         string? url = GetData<string>(result);
 
          Assert.IsFalse(string.IsNullOrWhiteSpace(url), "Response is empty.");
          Console.WriteLine($"ZipChat Copilot URL: {url}");
@@ -112,7 +127,9 @@ namespace GISBlox.MCP.Server.Tests
       public void OpenNeigboursInZipChatCopilot()
       {
          string id = "2809RA";
-         string url = VisualizationTools.AskZipChatCopilot(id, true);
+
+         McpToolOutput result = _visualizationTools.AskZipChatCopilot(id, true);
+         string? url = GetData<string>(result);
 
          Assert.IsFalse(string.IsNullOrWhiteSpace(url), "Response is empty.");
          Console.WriteLine($"ZipChat Copilot URL: {url}");
