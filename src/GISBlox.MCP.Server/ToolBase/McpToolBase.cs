@@ -139,7 +139,7 @@ namespace GISBlox.MCP.Server.ToolBase
          sb.AppendLine($"**{env.Status}**");
          sb.AppendLine();
 
-         if (env.Summary != null)
+         if (!string.IsNullOrWhiteSpace(env.Summary))
          {
             sb.AppendLine($"{env.Summary}");
             sb.AppendLine();

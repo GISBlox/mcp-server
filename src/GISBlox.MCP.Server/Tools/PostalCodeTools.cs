@@ -9,6 +9,7 @@ using GISBlox.Services.SDK;
 using GISBlox.Services.SDK.Models;
 using ModelContextProtocol.Server;
 using System.ComponentModel;
+using System.Text;
 using System.Text.RegularExpressions;
 
 [McpServerToolType]
@@ -215,61 +216,74 @@ internal class PostalCodeTools : McpToolBase
       return record;
    }
 
+   private static (string? sourcePC, IEnumerable<string>? postalCodes) ParsePostalCodeRecord(IPostalCodeRecord record)
+   {
+      return record switch
+      {
+         IPostalCode4Record pc4 => (pc4.MetaData.Query, pc4.PostalCode?.Select(pc => pc.Id)),
+         IPostalCode6Record pc6 => (pc6.MetaData.Query, pc6.PostalCode?.Select(pc => pc.Id)),
+         _ => (null, null)
+      };
+   }
+
    private static string BuildNeighbourSummary(IPostalCodeRecord? record)
    {
-      int count = 0;
-
       if (record == null)
          return "I found **0** neighbouring postal codes.";
 
-      if (record is IPostalCode4Record pc4Record)
-      {
-         count = pc4Record.PostalCode?.Count ?? 0;
-      }
-      else if (record is IPostalCode6Record pc6Record)
-      {
-         count = pc6Record.PostalCode?.Count ?? 0;
-      }
+      var (sourcePC, postalCodes) = ParsePostalCodeRecord(record);
+      if (postalCodes == null)
+         return "I found **0** neighbouring postal codes.";
 
-      return $"I found **{count}** neighbouring postal codes.";
+      var neighbors = postalCodes.Where(id => id != sourcePC).ToList();
+      
+      if (neighbors.Count == 0)
+         return $"I found **0** neighbour(s) of postal code {sourcePC}.";
+
+      StringBuilder sb = new();
+      foreach (string id in neighbors)
+         sb.AppendLine($"- {id}");
+
+      return $"I found **{neighbors.Count}** neighbour(s) of postal code {sourcePC}:\r\n{sb}";
    }
 
    private static string BuildGeometrySummary(IPostalCodeRecord? record)
    {
-      int count = 0;
       if (record == null)
-         return "I found **0** postal codes for the given geometry.";
-      if (record is IPostalCode4Record pc4Record)
-      {
-         count = pc4Record.PostalCode?.Count ?? 0;
-      }
-      else if (record is IPostalCode6Record pc6Record)
-      {
-         count = pc6Record.PostalCode?.Count ?? 0;
-      }
-      return $"I found **{count}** postal codes for the given geometry.";
+         return "I found **0** postal codes in the given geometry.";
+
+      var (_, postalCodes) = ParsePostalCodeRecord(record);      
+      if (postalCodes == null)
+         return "I found **0** postal codes in the given geometry.";
+
+      StringBuilder sb = new();
+      foreach (string id in postalCodes)
+         sb.AppendLine($"- {id}");
+
+      return $"I found **{postalCodes.Count()}** postal code(s) in the given geometry:\r\n{sb}";
    }
 
    private static string BuildAreaSummary(IPostalCodeRecord? record)
    {
-      int count = 0;
       if (record == null)
-         return "I found **0** postal codes for the given area.";
-      if (record is IPostalCode4Record pc4Record)
-      {
-         count = pc4Record.PostalCode?.Count ?? 0;
-      }
-      else if (record is IPostalCode6Record pc6Record)
-      {
-         count = pc6Record.PostalCode?.Count ?? 0;
-      }
-      return $"I found **{count}** postal codes for the given area.";
-   }
+         return "I found **0** postal codes in the given area.";
+      
+      var (_, postalCodes) = ParsePostalCodeRecord(record);
+      if (postalCodes == null)
+         return "I found **0** postal codes in the given area.";
+
+      StringBuilder sb = new();
+      foreach (string id in postalCodes)
+         sb.AppendLine($"- {id}");
+
+      return $"I found **{postalCodes.Count()}** postal code(s) in the given area:\r\n{sb}";
+   }   
 
    private static string BuildKerncijferSummary(KerncijferRecord? record)
    {
       if (record == null)
          return "I found no key figures for the given postal code.";
+
       return $"I found **{record.MetaData?.TotalAttributes ?? 0}** key figures for the given postal code.";
    }
 
