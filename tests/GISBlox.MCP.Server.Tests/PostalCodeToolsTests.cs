@@ -282,6 +282,26 @@ namespace GISBlox.MCP.Server.Tests
 
       }
 
+      [TestMethod]
+      public async Task RunAudienceAnalysisWeights()
+      {
+         string ids = "1011,1012";
+         string preset = "Starters";
+         string weights = """{"Senior": { "65Plus": 0.4, "Alleen": 0.1 }}""";
+
+         var result = await _postalCodeTools.RunAudienceAnalysis(_client, ids, preset, weights, cancellationToken: CancellationToken.None);
+         AudienceAnalysisResult? record = GetData<AudienceAnalysisResult>(result);
+
+         Assert.IsNotNull(record, "Response is empty.");
+         Assert.HasCount(2, record.Items, "Unexpected number of items in the analysis result.");
+
+         //double seniorenScore = record.Insights.TryGetValue("SeniorenScore", out object? topInsightValue) ? Convert.ToDouble(topInsightValue) : 0;
+         //Assert.IsGreaterThan(0, seniorenScore, "SeniorenScore insight is missing or not greater than 0.");
+         //Assert.AreEqual(0.725, seniorenScore, 0.001, "SeniorenScore insight is not as expected.");
+
+      }
+
+
       #endregion
 
       #region PC6

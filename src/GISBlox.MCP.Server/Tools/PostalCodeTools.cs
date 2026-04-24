@@ -20,6 +20,12 @@ internal class PostalCodeTools : McpToolBase
 {
    protected override string ToolGroupName => "Spatial Atlas";
 
+   private static readonly ToolOutputOptions AudienceAnalysisOutputOptions = new()
+   {
+      IncludeData = false,
+      DataOmittedReason = "Detailed analysis data was intentionally omitted from the tool output."
+   };
+
    [McpServerTool(Name = "PostalCodeLookup")]
    [Description("Returns the postal code record for a given postal code. Can include its WKT geometries if includeWktGeometries is true.")]
    public async Task<McpToolOutput> GetPostalCodeRecord(
@@ -198,7 +204,8 @@ internal class PostalCodeTools : McpToolBase
             string cleanIds = SanitizePostalCodeIds(ids);
             return await gisbloxClient.PostalCodes.RunAudienceAnalysis(cleanIds, preset, weightsJson, ct);
          },
-         parameters, toolName, description, null, cancellationToken);
+         parameters, toolName, description, result => BuildAudienceAnalysisSummary(result, preset, weightsJson), cancellationToken,
+         AudienceAnalysisOutputOptions);
    }
 
    #region Internal Helpers
@@ -322,6 +329,14 @@ internal class PostalCodeTools : McpToolBase
          return "I found no key figures for the given postal code.";
 
       return $"I found **{record.MetaData?.TotalAttributes ?? 0}** key figures for the given postal code.";
+   }
+
+   private static string BuildAudienceAnalysisSummary(AudienceAnalysisResult? result, string preset, string? weightsJson)
+   {
+      if (result == null)
+         return "The audience analysis did not return any results.";
+
+      return MarkdownHelper.BuildAudienceAnalysisResponse(preset, result.Insights, result.Persona, weightsJson);
    }
 
    #endregion
