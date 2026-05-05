@@ -11,7 +11,7 @@ namespace GISBlox.MCP.Server.Helpers
    {
       private enum AnalysisMode { Analysis, Targeting };
 
-      public static string BuildAudienceAnalysisResponse(string preset, Dictionary<string, object> insights, Dictionary<string, object> persona, string weightsJson)
+      public static string BuildAudienceAnalysisResponse(string preset, Dictionary<string, object> insights, Dictionary<string, object> persona, string? weightsJson)
       {
          StringBuilder sb = new();
 
@@ -56,12 +56,9 @@ namespace GISBlox.MCP.Server.Helpers
                sb.AppendLine(BuildAudienceScoresTable(insights, true));
                sb.AppendLine();
 
-               sb.AppendLine("> These scores show how strongly this area matches the selected target audience.");
-               sb.AppendLine();
-
                sb.AppendLine("### Weight configuration (Targeting)");
                sb.AppendLine($"The following overrides were applied to calculate the targeting scores for **{preset}**.");
-               sb.AppendLine("Only the values included override the preset defaults.");
+               sb.AppendLine("Only the values included below override the preset defaults.");
                sb.AppendLine();
                sb.AppendLine(BuildAudienceWeightsTable(weightsJson));
                sb.AppendLine();
@@ -91,7 +88,7 @@ namespace GISBlox.MCP.Server.Helpers
          return sb.ToString();
       }
 
-      private static string BuildAudienceWeightsTable(string weightsJson)
+      private static string BuildAudienceWeightsTable(string? weightsJson)
       {
          if (string.IsNullOrEmpty(weightsJson) || weightsJson.Length == 0)
          {

@@ -19,13 +19,7 @@ using System.Text.RegularExpressions;
 internal class PostalCodeTools : McpToolBase
 {
    protected override string ToolGroupName => "Spatial Atlas";
-
-   private static readonly ToolOutputOptions AudienceAnalysisOutputOptions = new()
-   {
-      IncludeData = false,
-      DataOmittedReason = "Detailed analysis data was intentionally omitted from the tool output."
-   };
-
+   
    [McpServerTool(Name = "PostalCodeLookup")]
    [Description("Returns the postal code record for a given postal code. Can include its WKT geometries if includeWktGeometries is true.")]
    public async Task<McpToolOutput> GetPostalCodeRecord(
@@ -197,15 +191,14 @@ internal class PostalCodeTools : McpToolBase
    {
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { ids, preset, weightsJson });
-            
+     
       return await ExecuteToolAsync<AudienceAnalysisResult>(
          async ct =>
          {
             string cleanIds = SanitizePostalCodeIds(ids);
             return await gisbloxClient.PostalCodes.RunAudienceAnalysis(cleanIds, preset, weightsJson, ct);
          },
-         parameters, toolName, description, result => BuildAudienceAnalysisSummary(result, preset, weightsJson), cancellationToken,
-         AudienceAnalysisOutputOptions);
+         parameters, toolName, description, result => BuildAudienceAnalysisSummary(result, preset, weightsJson), cancellationToken);
    }
 
    #region Internal Helpers
