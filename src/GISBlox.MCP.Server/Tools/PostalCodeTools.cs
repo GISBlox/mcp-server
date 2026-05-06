@@ -192,7 +192,7 @@ internal class PostalCodeTools : McpToolBase
       var (toolName, description) = GetCurrentToolMetadata();
       var parameters = ToolParameterHelper.Extract(new { ids, preset, weightsJson });
      
-      return await ExecuteToolAsync<AudienceAnalysisResult>(
+      return await ExecuteToolAsync<AudienceAnalysisRecord>(
          async ct =>
          {
             string cleanIds = SanitizePostalCodeIds(ids);
@@ -324,12 +324,12 @@ internal class PostalCodeTools : McpToolBase
       return $"I found **{record.MetaData?.TotalAttributes ?? 0}** key figures for the given postal code.";
    }
 
-   private static string BuildAudienceAnalysisSummary(AudienceAnalysisResult? result, string preset, string? weightsJson)
+   private static string BuildAudienceAnalysisSummary(AudienceAnalysisRecord? record, string preset, string? weightsJson)
    {
-      if (result == null)
+      if (record == null)
          return "The audience analysis did not return any results.";
 
-      return MarkdownHelper.BuildAudienceAnalysisResponse(preset, result.Insights, result.Persona, weightsJson);
+      return MarkdownHelper.BuildAudienceAnalysisResponse(preset, record.Results, weightsJson);
    }
 
    #endregion

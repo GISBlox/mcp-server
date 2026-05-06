@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -271,15 +272,18 @@ namespace GISBlox.MCP.Server.Tests
          string preset = "Senioren";
 
          var result = await _postalCodeTools.RunAudienceAnalysis(_client, ids, preset, cancellationToken:CancellationToken.None);
-         AudienceAnalysisResult? record = GetData<AudienceAnalysisResult>(result);
+         AudienceAnalysisRecord? analysisRecord = GetData<AudienceAnalysisRecord>(result);
          
-         Assert.IsNotNull(record, "Response is empty.");
-         Assert.HasCount(2, record.Items, "Unexpected number of items in the analysis result.");
+         Assert.IsNotNull(analysisRecord, "Response is empty.");
+         Assert.HasCount(2, analysisRecord.Results, "Unexpected number of items in the analysis result.");
 
-         double seniorenScore = record.Insights.TryGetValue("SeniorenScore", out object? topInsightValue) ? Convert.ToDouble(topInsightValue) : 0;
-         Assert.IsGreaterThan(0, seniorenScore, "SeniorenScore insight is missing or not greater than 0.");
-         Assert.AreEqual(0.725, seniorenScore, 0.001, "SeniorenScore insight is not as expected.");
+         AudienceAnalysisResult? result1011 = analysisRecord.Results.Find(result => result.PostalCode == "1011");
+         double seniorenScore1011 = GetDictionaryValue(result1011?.TargetingScores, "SeniorenScore");
+         Assert.AreEqual(0.751, seniorenScore1011, 0.001, "SeniorenScore insight is not as expected.");
 
+         AudienceAnalysisResult? result1012 = analysisRecord.Results.Find(result => result.PostalCode == "1012");
+         double seniorenScore1012 = GetDictionaryValue(result1012?.TargetingScores, "SeniorenScore");
+         Assert.AreEqual(0.696, seniorenScore1012, 0.001, "SeniorenScore insight is not as expected.");
       }
 
       [TestMethod]
@@ -290,17 +294,19 @@ namespace GISBlox.MCP.Server.Tests
          string weights = """{"Senior": { "65Plus": 0.4, "Alleen": 0.1 }}""";
 
          var result = await _postalCodeTools.RunAudienceAnalysis(_client, ids, preset, weights, cancellationToken: CancellationToken.None);
-         AudienceAnalysisResult? record = GetData<AudienceAnalysisResult>(result);
+         AudienceAnalysisRecord? analysisRecord = GetData<AudienceAnalysisRecord>(result);
 
-         Assert.IsNotNull(record, "Response is empty.");
-         Assert.HasCount(2, record.Items, "Unexpected number of items in the analysis result.");
+         Assert.IsNotNull(analysisRecord, "Response is empty.");
+         Assert.HasCount(2, analysisRecord.Results, "Unexpected number of items in the analysis result.");
 
-         //double seniorenScore = record.Insights.TryGetValue("SeniorenScore", out object? topInsightValue) ? Convert.ToDouble(topInsightValue) : 0;
-         //Assert.IsGreaterThan(0, seniorenScore, "SeniorenScore insight is missing or not greater than 0.");
-         //Assert.AreEqual(0.725, seniorenScore, 0.001, "SeniorenScore insight is not as expected.");
+         AudienceAnalysisResult? result1011 = analysisRecord.Results.Find(result => result.PostalCode == "1011");
+         double starterScore1011 = GetDictionaryValue(result1011?.TargetingScores, "StarterScore");
+         Assert.AreEqual(0.597, starterScore1011, 0.001, "StarterScore insight is not as expected.");
 
+         AudienceAnalysisResult? result1012 = analysisRecord.Results.Find(result => result.PostalCode == "1012");
+         double starterScore1012 = GetDictionaryValue(result1012?.TargetingScores, "StarterScore");
+         Assert.AreEqual(0.688, starterScore1012, 0.001, "StarterScore insight is not as expected.");
       }
-
 
       #endregion
 
@@ -506,6 +512,21 @@ namespace GISBlox.MCP.Server.Tests
          Assert.AreEqual(35, record.MetaData.TotalAttributes);
 
          await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
+      }
+
+      #endregion
+
+      #region Helpers
+
+      private static double GetDictionaryValue(Dictionary<string, object>? dict, string key)
+      {
+         return dict?.TryGetValue(key, out object? value) == true
+            ? value switch
+            {
+               JsonElement { ValueKind: JsonValueKind.Number } jsonNumber => jsonNumber.GetDouble(),
+               JsonElement { ValueKind: JsonValueKind.String } jsonString when double.TryParse(jsonString.GetString(), out double parsed) => parsed,
+               _ => Convert.ToDouble(value)
+            } : 0;
       }
 
       #endregion

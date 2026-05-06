@@ -2,6 +2,7 @@
 // Copyright(c) Bartels Online. All rights reserved.
 // ----------------------------------------------------
 
+using GISBlox.Services.SDK.Models;
 using System.Text;
 using System.Text.Json;
 
@@ -11,14 +12,17 @@ namespace GISBlox.MCP.Server.Helpers
    {
       private enum AnalysisMode { Analysis, Targeting };
 
-      public static string BuildAudienceAnalysisResponse(string preset, Dictionary<string, object> insights, Dictionary<string, object> persona, string? weightsJson)
+      public static string BuildAudienceAnalysisResponse(string preset, List<AudienceAnalysisResult> results, string? weightsJson)
       {
          StringBuilder sb = new();
+
+         Dictionary<string, object> persona = [];
+         Dictionary<string, object> insights = [];
 
          AnalysisMode mode = preset.Equals("neutraal", StringComparison.InvariantCultureIgnoreCase) ? AnalysisMode.Analysis : AnalysisMode.Targeting;
          switch (mode)
          {
-            case AnalysisMode.Analysis:
+            case AnalysisMode.Analysis:               
 
                sb.AppendLine("## 🔍 Analysis Mode");
                sb.AppendLine("Shows the dominant persona of this postcode group based on neutral demographic scoring.");
