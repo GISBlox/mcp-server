@@ -85,9 +85,9 @@ namespace GISBlox.MCP.Server.Helpers
             double seniorsScore = GetDoubleValue(insights, "SeniorenScore");
 
             // Format scores
-            string starterScoreStr = toPercentages ? $"{Math.Round(starterScore * 100, 1)}%" : Math.Round(starterScore, 2).ToString().Replace(",", ".");
-            string youngFamiliesScoreStr = toPercentages ? $"{Math.Round(youngFamiliesScore * 100, 1)}%" : Math.Round(youngFamiliesScore, 2).ToString().Replace(",", ".");
-            string seniorsScoreStr = toPercentages ? $"{Math.Round(seniorsScore * 100, 1)}%" : Math.Round(seniorsScore, 2).ToString().Replace(",", ".");
+            string starterScoreStr = FormatScore(starterScore, toPercentages);
+            string youngFamiliesScoreStr = FormatScore(youngFamiliesScore, toPercentages);
+            string seniorsScoreStr = FormatScore(seniorsScore, toPercentages);
             
             sb.AppendLine($"| {postcode} | {starterScoreStr} | {youngFamiliesScoreStr} | {seniorsScoreStr} | {persona} |");
          }      
@@ -190,6 +190,11 @@ namespace GISBlox.MCP.Server.Helpers
       private static string GetStringValue(Dictionary<string, object>? dict, string key)
       {
          return (dict?.TryGetValue(key, out object? value) == true ? value?.ToString() : null) ?? "Unknown";
+      }
+
+      private static string FormatScore(double score, bool toPercentage)
+      {
+         return toPercentage ? $"{Math.Round(score * 100, 1)}%" : Math.Round(score, 2).ToString().Replace(",", ".");
       }
    }
 }
