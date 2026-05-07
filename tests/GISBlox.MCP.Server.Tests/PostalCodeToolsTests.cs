@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -263,6 +264,70 @@ namespace GISBlox.MCP.Server.Tests
 
          await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
       }
+      
+      [TestMethod]
+      public async Task RunAudienceAnalysisNeutral()
+      {
+         string ids = "1011,1012";
+         string preset = "Neutraal";
+
+         var result = await _postalCodeTools.RunAudienceAnalysis(_client, ids, preset, cancellationToken: CancellationToken.None);
+         AudienceAnalysisRecord? analysisRecord = GetData<AudienceAnalysisRecord>(result);
+
+         Assert.IsNotNull(analysisRecord, "Response is empty.");
+         Assert.HasCount(2, analysisRecord.Results, "Unexpected number of items in the analysis result.");
+
+         AudienceAnalysisResult? result1011 = analysisRecord.Results.Find(result => result.PostalCode == "1011");
+         double seniorenScore1011 = GetDictionaryValue(result1011?.TargetingScores, "SeniorenScore");
+         Assert.AreEqual(0.43, seniorenScore1011, 0.001, "SeniorenScore insight is not as expected.");
+
+         AudienceAnalysisResult? result1012 = analysisRecord.Results.Find(result => result.PostalCode == "1012");
+         double seniorenScore1012 = GetDictionaryValue(result1012?.TargetingScores, "SeniorenScore");
+         Assert.AreEqual(0.408, seniorenScore1012, 0.001, "SeniorenScore insight is not as expected.");
+      }
+
+      [TestMethod]
+      public async Task RunAudienceAnalysisTargetedNoWeights()
+      {
+         string ids = "1011,1012";
+         string preset = "Senioren";
+
+         var result = await _postalCodeTools.RunAudienceAnalysis(_client, ids, preset, cancellationToken:CancellationToken.None);
+         AudienceAnalysisRecord? analysisRecord = GetData<AudienceAnalysisRecord>(result);
+         
+         Assert.IsNotNull(analysisRecord, "Response is empty.");
+         Assert.HasCount(2, analysisRecord.Results, "Unexpected number of items in the analysis result.");
+
+         AudienceAnalysisResult? result1011 = analysisRecord.Results.Find(result => result.PostalCode == "1011");
+         double seniorenScore1011 = GetDictionaryValue(result1011?.TargetingScores, "SeniorenScore");
+         Assert.AreEqual(0.751, seniorenScore1011, 0.001, "SeniorenScore insight is not as expected.");
+
+         AudienceAnalysisResult? result1012 = analysisRecord.Results.Find(result => result.PostalCode == "1012");
+         double seniorenScore1012 = GetDictionaryValue(result1012?.TargetingScores, "SeniorenScore");
+         Assert.AreEqual(0.696, seniorenScore1012, 0.001, "SeniorenScore insight is not as expected.");
+      }
+
+      [TestMethod]
+      public async Task RunAudienceAnalysisTargetedWeights()
+      {
+         string ids = "1011,1012";
+         string preset = "Starters";
+         string weights = """{"Senior": { "65Plus": 0.4, "Alleen": 0.1 }}""";
+
+         var result = await _postalCodeTools.RunAudienceAnalysis(_client, ids, preset, weights, cancellationToken: CancellationToken.None);
+         AudienceAnalysisRecord? analysisRecord = GetData<AudienceAnalysisRecord>(result);
+
+         Assert.IsNotNull(analysisRecord, "Response is empty.");
+         Assert.HasCount(2, analysisRecord.Results, "Unexpected number of items in the analysis result.");
+
+         AudienceAnalysisResult? result1011 = analysisRecord.Results.Find(result => result.PostalCode == "1011");
+         double starterScore1011 = GetDictionaryValue(result1011?.TargetingScores, "StarterScore");
+         Assert.AreEqual(0.597, starterScore1011, 0.001, "StarterScore insight is not as expected.");
+
+         AudienceAnalysisResult? result1012 = analysisRecord.Results.Find(result => result.PostalCode == "1012");
+         double starterScore1012 = GetDictionaryValue(result1012?.TargetingScores, "StarterScore");
+         Assert.AreEqual(0.688, starterScore1012, 0.001, "StarterScore insight is not as expected.");
+      }
 
       #endregion
 
@@ -468,6 +533,21 @@ namespace GISBlox.MCP.Server.Tests
          Assert.AreEqual(35, record.MetaData.TotalAttributes);
 
          await Task.Delay(API_QUOTA_DELAY, CancellationToken.None);
+      }
+
+      #endregion
+
+      #region Helpers
+
+      private static double GetDictionaryValue(Dictionary<string, object>? dict, string key)
+      {
+         return dict?.TryGetValue(key, out object? value) == true
+            ? value switch
+            {
+               JsonElement { ValueKind: JsonValueKind.Number } jsonNumber => jsonNumber.GetDouble(),
+               JsonElement { ValueKind: JsonValueKind.String } jsonString when double.TryParse(jsonString.GetString(), out double parsed) => parsed,
+               _ => Convert.ToDouble(value)
+            } : 0;
       }
 
       #endregion

@@ -30,7 +30,7 @@ namespace GISBlox.MCP.Server.ToolBase
       /// <param name="toolName">The name of the tool being executed.</param>
       /// <param name="description">The description of the tool.</param>
       /// <param name="summaryBuilder">Optional function to build a summary from the result.</param>
-      /// <param name="cancellationToken">Cancellation token for the operation.</param>
+      /// <param name="cancellationToken">Cancellation token for the operation.</param>      
       /// <returns>A McpToolOutput containing the result or error information.</returns>
       protected async Task<McpToolOutput> ExecuteToolAsync<TResult>(Func<CancellationToken, Task<TResult>> operation,
          object? parameters, string toolName, string description, Func<TResult?, string>? summaryBuilder, CancellationToken cancellationToken)
@@ -67,9 +67,9 @@ namespace GISBlox.MCP.Server.ToolBase
       /// <param name="parameters">Optional parameters used during the tool execution.</param>
       /// <param name="metadata">Optional additional metadata related to the tool execution.</param>      
       /// <param name="notes">Optional notes to include in the output. Can be used to provide further insights or comments about the tool execution.</param>
-      /// <param name="summary">Optional summary information describing the outcome of the tool execution. Included in the output for quick reference.</param>
+      /// <param name="summary">Optional summary information describing the outcome of the tool execution. Included in the output for quick reference.</param>      
       /// <returns>A McpToolOutput object containing the tool's name, summary, metadata, result data, and a formatted markdown representation of the execution.</returns>
-      protected McpToolOutput ProcessResult(string toolName, object? result, object? parameters = null, object? metadata = null, string? notes = null, string ? summary = null)
+      protected McpToolOutput ProcessResult(string toolName, object? result, object? parameters = null, object? metadata = null, string? notes = null, string? summary = null)
       {
          ResultEnvelope<object?> envelope = new()
          {
@@ -85,7 +85,7 @@ namespace GISBlox.MCP.Server.ToolBase
             Notes = notes
          };
 
-         return CreateToolOutput(envelope);         
+         return CreateToolOutput(envelope);
       }
 
       /// <summary>
@@ -131,7 +131,7 @@ namespace GISBlox.MCP.Server.ToolBase
          sb.AppendLine();
 
          if (!string.IsNullOrWhiteSpace(env.Notes))
-         {            
+         {
             sb.AppendLine(env.Notes);
             sb.AppendLine();
          }
@@ -144,27 +144,28 @@ namespace GISBlox.MCP.Server.ToolBase
             sb.AppendLine($"{env.Summary}");
             sb.AppendLine();
          }
-
-         sb.AppendLine("---");
-         sb.AppendLine();
-
+        
          if (env.Metadata != null)
          {
             dynamic metaDataObj = env.Metadata;
             var extra = metaDataObj.Extra;
             if (extra != null)
             {
+               sb.AppendLine("---");
+               sb.AppendLine();
+
                sb.AppendLine("### Metadata");
                sb.AppendLine();
                sb.AppendLine(ObjectToMarkdownTable(extra));
-               sb.AppendLine();
-               sb.AppendLine("---");
-               sb.AppendLine();
+               sb.AppendLine();               
             }
          }
 
          if (env.Data != null)
          {
+            sb.AppendLine("---");
+            sb.AppendLine();
+
             if (IsCollection(env.Data))
             {
                IEnumerable collection = (IEnumerable)env.Data;
@@ -196,17 +197,17 @@ namespace GISBlox.MCP.Server.ToolBase
                sb.AppendLine("_Full JSON available in the `data` field._");
             }
 
-            sb.AppendLine();
-            sb.AppendLine("---");
-            sb.AppendLine();
-         }         
+            sb.AppendLine();            
+         }
 
          return sb.ToString();
       }
 
       private static bool IsCollection(object obj)
       {
-         if (obj is string) return false;
+         if (obj is string)
+            return false;
+
          return obj is IEnumerable;
       }
 
@@ -219,7 +220,7 @@ namespace GISBlox.MCP.Server.ToolBase
          sb.AppendLine("|-------|--------|");
 
          foreach (var prop in props)
-         {            
+         {
             if (prop.GetIndexParameters().Length > 0)
                continue;
 
@@ -237,28 +238,22 @@ namespace GISBlox.MCP.Server.ToolBase
       {
          if (value == null)
             return "_null_";
-                  
+
          if (value is string str)
             return str;
 
-         // Check if it's a collection
          if (value is IEnumerable enumerable)
          {
             List<object> items = [.. enumerable.Cast<object>()];
             int count = items.Count;
 
             if (count == 0)
-               return "_empty collection_";
+               return "_empty collection_";           
 
-            // Show first few items with count
-            var preview = string.Join(", ", items.Take(3).Select(i => i?.ToString() ?? "null"));
-
-            if (count > 3)
-               return $"[{count} items: {preview}, ...]";
-            else
-               return $"[{count} items: {preview}]";
+            return $"[{count} items]";
          }
+
          return value.ToString() ?? "";
-      }       
+      }
    }
 }

@@ -19,7 +19,7 @@ using System.Text.RegularExpressions;
 internal class PostalCodeTools : McpToolBase
 {
    protected override string ToolGroupName => "Spatial Atlas";
-
+   
    [McpServerTool(Name = "PostalCodeLookup")]
    [Description("Returns the postal code record for a given postal code. Can include its WKT geometries if includeWktGeometries is true.")]
    public async Task<McpToolOutput> GetPostalCodeRecord(
@@ -177,6 +177,30 @@ internal class PostalCodeTools : McpToolBase
          parameters, toolName, description, BuildKerncijferSummary, cancellationToken);
    }
 
+   [McpServerTool(Name = "AudienceAnalysis")]
+   [Description("Performs an audience analysis for a given list of postal codes using a specified preset configuration. Optionally accepts custom weights for targeted analysis.")]
+   public async Task<McpToolOutput> RunAudienceAnalysis(
+      GISBloxClient gisbloxClient,
+      [ParamDesc("A comma-separated list of Dutch postal codes (4 digits like '1234' or 6 characters like '1234AB'). You cannot combine 4-digit and 6-character postal codes in the same request.")]
+      string ids,
+      [ParamDesc("The name of the preset configuration to use for the analysis. Determines the analysis parameters and metrics.")]
+      string preset,
+      [ParamDesc("Optional JSON string representing custom weights for the analysis. Overrides the default weights in the preset.")]
+      string? weightsJson = null,
+      CancellationToken cancellationToken = default)
+   {
+      var (toolName, description) = GetCurrentToolMetadata();
+      var parameters = ToolParameterHelper.Extract(new { ids, preset, weightsJson });
+     
+      return await ExecuteToolAsync<AudienceAnalysisRecord>(
+         async ct =>
+         {
+            string cleanIds = SanitizePostalCodeIds(ids);
+            return await gisbloxClient.PostalCodes.RunAudienceAnalysis(cleanIds, preset, weightsJson, ct);
+         },
+         parameters, toolName, description, result => BuildAudienceAnalysisSummary(result, preset, weightsJson), cancellationToken);
+   }
+
    #region Internal Helpers
 
    private static string SanitizePostalCodeId(string id, out bool isPC4)
@@ -190,6 +214,19 @@ internal class PostalCodeTools : McpToolBase
 
       isPC4 = cleanId.Length == 4;
       return cleanId;
+   }
+
+   private static string SanitizePostalCodeIds(string ids)
+   {
+      string cleanIds = ids?.Replace(" ", string.Empty) ?? string.Empty;
+      foreach (string id in cleanIds.Split(','))
+      {
+         if (!IsValidPostalCode4(id) && !IsValidPostalCode6(id))
+         {
+            throw new ArgumentException($"Invalid Dutch postal code: {id}", nameof(ids));
+         }
+      }
+      return cleanIds;
    }
 
    private static bool IsValidPostalCode4(string postalCode)
@@ -285,6 +322,14 @@ internal class PostalCodeTools : McpToolBase
          return "I found no key figures for the given postal code.";
 
       return $"I found **{record.MetaData?.TotalAttributes ?? 0}** key figures for the given postal code.";
+   }
+
+   private static string BuildAudienceAnalysisSummary(AudienceAnalysisRecord? record, string preset, string? weightsJson)
+   {
+      if (record == null)
+         return "The audience analysis did not return any results.";
+
+      return MarkdownHelper.BuildAudienceAnalysisResponse(preset, record.Results, weightsJson);
    }
 
    #endregion
