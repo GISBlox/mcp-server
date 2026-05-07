@@ -11,6 +11,11 @@ The GISBlox MCP Server enables your AI applications to tap into advanced geospat
 - **Project** and transform geospatial data across coordinate systems with ease  
 - Get access to **usage data** and insights of tracked interactive maps 
 
+### 🆕 GISBlox MCP Studio
+
+GISBlox MCP Studio gives you a simple, visual way to experiment with this MCP server and its tools. 
+Try curated playgrounds and see instant results without writing any code. [Try it out today!](https://mcpstudio.gisblox.com/)
+
 ### Why Use This Server?  
 - **AI‑ready**: Designed for MCP, making it easy to connect geospatial intelligence to your AI workflows  
 - **Scalable**: Built on .NET for performance and reliability in production environments  
@@ -58,6 +63,7 @@ Try these prompts after setting up the MCP server:
 - "List the Dutch gemeenten and sort them alphabetically"
 - "Give me some key demographics for postal code 3811"
 - "Which postal codes are neighbours of postal code 3068?"
+- "What is the demographic composition of postal codes 1012, 1013, and 1014?"
 - "Visualize the postal code areas for 1012, 1013, and 1014 in Amsterdam on a map"
 
 ### Projection
@@ -85,7 +91,8 @@ Provides access to map analytics data using the [GISBlox Map Analytics API](http
 Provides access to Dutch postal code data, including demographics, neighborhoods, and more using the [GISBlox Postal Codes API](https://services.gisblox.com/index.html#operations-tag-Dutch_Postal_Codes_-_4_digits). Features include:
 - Retrieve postal code details
 - List neighboring postal codes
-- Get demographic information for a specific postal code
+- Get demographic information of a specific postal code
+- Run a targeted audience analysis on a group of postal codes
 - Retrieve postal code records for Dutch municipalities (gemeenten), neighborhoods (wijken) and districts (buurten)
 - Query postal codes based on a WKT geometry string, with optional buffer distance
 
@@ -111,6 +118,8 @@ Generates visual representations of geospatial data. Capabilities include:
 
 ## 📚 Additional Resources
 
-- [GISBlox Services SDK](https://github.com/GISBlox/gisblox-services-sdk)
+- [GISBlox MCP Studio](https://mcpstudio.gisblox.com/)
+- [GISBlox MCP Prompt Pack](https://github.com/GISBlox/mcp-prompt-pack)
 - [Model Context Protocol Specification](https://modelcontextprotocol.io)
+- [GISBlox Services SDK](https://github.com/GISBlox/gisblox-services-sdk)
 - [Company website](https://www.bartelsonline.nl/)
