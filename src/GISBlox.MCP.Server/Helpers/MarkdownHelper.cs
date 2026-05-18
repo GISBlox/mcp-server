@@ -17,19 +17,19 @@ namespace GISBlox.MCP.Server.Helpers
          StringBuilder sb = new();                 
          AnalysisMode mode = preset.Equals("neutraal", StringComparison.InvariantCultureIgnoreCase) ? AnalysisMode.Analysis : AnalysisMode.Targeting;
 
+         sb.AppendLine("[REPORT_START]\r\n");
+
          switch (mode)
          {
             case AnalysisMode.Analysis:               
 
                sb.AppendLine("## 🔍 Analysis Report");
-               sb.AppendLine("This report shows the general population of each of the selected postal codes.");
+               sb.AppendLine("This report shows the demographic composition of each of the selected postal codes.");
                sb.AppendLine();
 
-               sb.AppendLine("The underlying demographic composition using the neutral weight configuration is as follows:");
-               sb.AppendLine();               
                sb.AppendLine("| Postcode | Starters | Young Families | Seniors | Persona |");
                sb.AppendLine("|----------|----------|----------------|---------|---------|");
-               sb.AppendLine(BuildAudienceScoresTable(results, true));
+               sb.AppendLine(BuildNeutralScoresTable(results));
                sb.AppendLine();               
                sb.AppendLine("> Neutral scores are relative indicators that compare demographic patterns across groups; they are not percentages and do not sum to 100%.");
                sb.AppendLine();
@@ -37,21 +37,16 @@ namespace GISBlox.MCP.Server.Helpers
                sb.AppendLine("### Weight configuration");
                sb.AppendLine("The neutral weight set was used to determine the dominant persona for each postcode.");
                sb.AppendLine("These weights are balanced and do not favor any specific target group.");
+               sb.AppendLine();
                break;
 
             case AnalysisMode.Targeting:
-
+               
                sb.AppendLine($"## 🎯 Analysis Report — Targeting mode");
                sb.AppendLine($"This report shows how well the selected postal codes align with the **{preset}** target audience.");
                sb.AppendLine();
 
-               sb.AppendLine("The targeting scores using the specified weight configuration are as follows:");
-               sb.AppendLine();               
-               sb.AppendLine("| Postcode | Starters | Young Families | Seniors | Persona |");
-               sb.AppendLine("|----------|----------|----------------|---------|---------|");
-               sb.AppendLine(BuildAudienceScoresTable(results, false));
-               sb.AppendLine();
-               sb.AppendLine("> The persona is based on the neutral weights, even when targeting scores are shown, to maintain consistency in persona assignment across analyses.");
+               sb.AppendLine(BuildTargetingScoresTable(results, preset));
                sb.AppendLine();
 
                sb.AppendLine("### Weight configuration");
@@ -65,17 +60,17 @@ namespace GISBlox.MCP.Server.Helpers
             default:
                break;
          }
+
+         sb.AppendLine("[REPORT_END]\r\n");
          return sb.ToString();
       }
 
-      private static string BuildAudienceScoresTable(List<AudienceAnalysisResult> results, bool isNeutralScoring)
+      private static string BuildNeutralScoresTable(List<AudienceAnalysisResult> results)
       {  
          StringBuilder sb = new();
-         bool toPercentages = !isNeutralScoring;
-
          foreach (AudienceAnalysisResult result in results)
          {
-            Dictionary<string, object> insights = isNeutralScoring ? result.NeutralScores : result.TargetingScores;
+            Dictionary<string, object> insights = result.NeutralScores;
 
             // Get values
             string postcode = result.PostalCode ?? "Unknown";
@@ -85,12 +80,41 @@ namespace GISBlox.MCP.Server.Helpers
             double seniorsScore = GetDoubleValue(insights, "SeniorenScore");
 
             // Format scores
-            string starterScoreStr = FormatScore(starterScore, toPercentages);
-            string youngFamiliesScoreStr = FormatScore(youngFamiliesScore, toPercentages);
-            string seniorsScoreStr = FormatScore(seniorsScore, toPercentages);
+            string starterScoreStr = FormatScore(starterScore, false);
+            string youngFamiliesScoreStr = FormatScore(youngFamiliesScore, false);
+            string seniorsScoreStr = FormatScore(seniorsScore, false);
             
             sb.AppendLine($"| {postcode} | {starterScoreStr} | {youngFamiliesScoreStr} | {seniorsScoreStr} | {persona} |");
          }      
+         return sb.ToString();
+      }
+
+      private static string BuildTargetingScoresTable(List<AudienceAnalysisResult> results, string preset)
+      {
+         StringBuilder sb = new();
+
+         // Build header based on preset
+         sb.AppendLine($"| Postcode | {preset} | Fit |");
+         sb.AppendLine("|----------|----------|-----|");
+
+         // Get values
+         foreach (AudienceAnalysisResult result in results)
+         {
+            Dictionary<string, object> insights = result.TargetingScores;
+            
+            string postcode = result.PostalCode ?? "Unknown";
+            double score = preset.ToLower() switch
+            {
+               "starter" => GetDoubleValue(insights, "StarterScore"),
+               "jongegezinnen" => GetDoubleValue(insights, "JongeGezinnenScore"),
+               "senioren" => GetDoubleValue(insights, "SeniorenScore"),
+               _ => 0
+            };
+
+            string scoreStr = FormatScore(score, true);
+            string scoreFit = GetTargetingFitSymbol(score);
+            sb.AppendLine($"| {postcode} | {scoreStr} | {scoreFit} |");
+         }
          return sb.ToString();
       }
 
@@ -195,6 +219,23 @@ namespace GISBlox.MCP.Server.Helpers
       private static string FormatScore(double score, bool toPercentage)
       {
          return toPercentage ? $"{Math.Round(score * 100, 1)}%" : Math.Round(score, 2).ToString().Replace(",", ".");
+      }
+
+      public static string GetTargetingFitSymbol(double targetingFit)
+      {
+         if (double.IsNaN(targetingFit))
+            return "·"; 
+
+         if (targetingFit < 0.20)
+            return "○"; 
+         if (targetingFit < 0.40)
+            return "◔"; 
+         if (targetingFit < 0.60)
+            return "◑"; 
+         if (targetingFit < 0.80)
+            return "◕"; 
+
+         return "●";
       }
    }
 }
