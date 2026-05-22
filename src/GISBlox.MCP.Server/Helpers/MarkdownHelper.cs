@@ -105,7 +105,7 @@ namespace GISBlox.MCP.Server.Helpers
             string postcode = result.PostalCode ?? "Unknown";
             double score = preset.ToLower() switch
             {
-               "starter" => GetDoubleValue(insights, "StarterScore"),
+               "starters" => GetDoubleValue(insights, "StarterScore"),
                "jongegezinnen" => GetDoubleValue(insights, "JongeGezinnenScore"),
                "senioren" => GetDoubleValue(insights, "SeniorenScore"),
                _ => 0
