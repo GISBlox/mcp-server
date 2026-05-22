@@ -27,8 +27,8 @@
 
   <ItemGroup>
     <PackageReference Include="GISBlox.Services.SDK" Version="2.6.5" />
-    <PackageReference Include="ModelContextProtocol" Version="1.2.0" />
-    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="1.2.0" />
+    <PackageReference Include="ModelContextProtocol" Version="1.3.0" />
+    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="1.3.0" />
   </ItemGroup>
 
   <ItemGroup>
