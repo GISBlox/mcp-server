@@ -196,7 +196,9 @@ namespace GISBlox.MCP.Server.Tests
 
          List<string> expectedIDs = ["1011", "1012"];
          Assert.IsTrue(record.PostalCode.All(pc => expectedIDs.Contains(pc.Id)));
-         Assert.AreEqual("POINT (4.905333126288753 52.37154228233867)", record.PostalCode[1].Location.Geometry.Centroid);
+
+         string centroid1011 = record.PostalCode.First(pc => pc.Id == "1011").Location.Geometry.Centroid;
+         Assert.AreEqual("POINT (4.905333126288753 52.37154228233867)", centroid1011);
 
          await Task.Delay(API_QUOTA_DELAY * 2, CancellationToken.None);
       }
