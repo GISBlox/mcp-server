@@ -29,9 +29,14 @@ namespace GISBlox.MCP.Server.ToolBase
 
       /// <summary>
       /// Optional usage collector for tracking tool execution metrics.
-      /// Injected via DI; null-safe for backward compatibility.
+      /// Set by the tool catalog after instance creation via DI.
       /// </summary>
-      protected IUsageCollector? UsageCollector { get; set; } = usageCollector;
+      protected IUsageCollector? UsageCollector { get; private set; } = usageCollector;
+
+      /// <summary>
+      /// Sets the usage collector after instance creation (called by the tool catalog via DI).
+      /// </summary>
+      internal void SetUsageCollector(IUsageCollector? collector) => UsageCollector = collector;
 
       /// <summary>
       /// Generic helper method for executing tool operations with standardized error handling and result processing.

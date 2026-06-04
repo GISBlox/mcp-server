@@ -34,11 +34,7 @@ public class HttpUsageDispatcher(HttpClient httpClient, IOptions<UsageTokenOptio
 
          if (!response.IsSuccessStatusCode)
          {
-            _logger.LogWarning(
-                "Failed to dispatch usage token {TokenId} to {IngestUrl}. Status: {StatusCode}",
-                token.TokenId,
-                _options.IngestUrl,
-                response.StatusCode);
+            _logger.LogWarning("Failed to dispatch usage token {TokenId} to {IngestUrl}. Status: {StatusCode}", token.TokenId, _options.IngestUrl, response.StatusCode);
          }
          else
          {
@@ -47,11 +43,7 @@ public class HttpUsageDispatcher(HttpClient httpClient, IOptions<UsageTokenOptio
       }
       catch (Exception ex)
       {
-         _logger.LogWarning(
-             ex,
-             "Exception occurred while dispatching usage token {TokenId} to {IngestUrl}. Usage data may be lost.",
-             token.TokenId,
-             _options.IngestUrl);
+         _logger.LogWarning(ex, "Exception occurred while dispatching usage token {TokenId} to {IngestUrl}. Usage data may be lost.", token.TokenId, _options.IngestUrl);
       }
    }
 }
