@@ -2,8 +2,11 @@
 // Copyright(c) Bartels Online. All rights reserved.
 // ----------------------------------------------------
 
+using GISBlox.MCP.Server.Infrastructure;
 using GISBlox.MCP.Server.Middleware;
 using GISBlox.MCP.Server.Models;
+using GISBlox.MCP.Tokens.Extensions;
+using GISBlox.MCP.Tokens.Usage;
 using GISBlox.Services.SDK;
 using System.Reflection;
 
@@ -52,6 +55,10 @@ if (httpEnabled && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(
 }
 
 #endregion
+
+// Register usage token tracking services
+builder.Services.AddUsageTokens(builder.Configuration);
+builder.Services.AddScoped<ICallerKeyAccessor, CallerKeyAccessor>();
 
 var mcp = builder.Services
     .AddMcpServer()

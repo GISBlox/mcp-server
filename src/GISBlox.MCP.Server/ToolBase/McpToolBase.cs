@@ -3,7 +3,9 @@
 // ----------------------------------------------------
 
 using GISBlox.MCP.Server.Helpers;
+using GISBlox.MCP.Tokens.Usage;
 using System.Collections;
+using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 
@@ -14,12 +16,22 @@ namespace GISBlox.MCP.Server.ToolBase
    /// providing common functionality for processing tool results and errors, 
    /// and generating structured markdown output for display in the MCP interface.
    /// </summary>
-   public abstract class McpToolBase
+   /// <remarks>
+   /// Constructor that allows DI to inject the usage collector.
+   /// </remarks>
+   /// <param name="usageCollector">Optional usage collector (injected via DI).</param>
+   public abstract class McpToolBase(IUsageCollector? usageCollector = null)
    {
       /// <summary>
       /// The name of the tool group/category that this tool belongs to.
       /// </summary>
       protected abstract string ToolGroupName { get; }
+
+      /// <summary>
+      /// Optional usage collector for tracking tool execution metrics.
+      /// Injected via DI; null-safe for backward compatibility.
+      /// </summary>
+      protected IUsageCollector? UsageCollector { get; set; } = usageCollector;
 
       /// <summary>
       /// Generic helper method for executing tool operations with standardized error handling and result processing.
@@ -35,15 +47,37 @@ namespace GISBlox.MCP.Server.ToolBase
       protected async Task<McpToolOutput> ExecuteToolAsync<TResult>(Func<CancellationToken, Task<TResult>> operation,
          object? parameters, string toolName, string description, Func<TResult?, string>? summaryBuilder, CancellationToken cancellationToken)
       {
+         var stopwatch = Stopwatch.StartNew();
          try
          {
             TResult result = await operation(cancellationToken);
+            stopwatch.Stop();
 
             string summary = summaryBuilder?.Invoke(result) ?? string.Empty;
-            return ProcessResult(toolName, result, parameters, null, description, summary);
+            McpToolOutput output = ProcessResult(toolName, result, parameters, null, description, summary);
+
+            // Record usage metrics (fire-and-forget, non-blocking)
+            if (UsageCollector != null)
+            {
+               string fullToolName = $"{ToolGroupName}.{toolName}";
+               _ = Task.Run(async () =>
+               {
+                  try
+                  {
+                     await UsageCollector.RecordAsync(fullToolName, stopwatch.ElapsedMilliseconds, output.Data, cancellationToken);
+                  }
+                  catch
+                  {
+                     // Suppress exceptions to prevent usage tracking from affecting tool execution
+                  }
+               }, CancellationToken.None);
+            }
+
+            return output;
          }
          catch (Exception ex)
          {
+            stopwatch.Stop();
             return ProcessError(toolName, ex);
          }
       }
@@ -144,7 +178,7 @@ namespace GISBlox.MCP.Server.ToolBase
             sb.AppendLine($"{env.Summary}");
             sb.AppendLine();
          }
-        
+
          if (env.Metadata != null)
          {
             dynamic metaDataObj = env.Metadata;
@@ -157,7 +191,7 @@ namespace GISBlox.MCP.Server.ToolBase
                sb.AppendLine("### Metadata");
                sb.AppendLine();
                sb.AppendLine(ObjectToMarkdownTable(extra));
-               sb.AppendLine();               
+               sb.AppendLine();
             }
          }
 
@@ -197,7 +231,7 @@ namespace GISBlox.MCP.Server.ToolBase
                sb.AppendLine("_Full JSON available in the `data` field._");
             }
 
-            sb.AppendLine();            
+            sb.AppendLine();
          }
 
          return sb.ToString();
@@ -248,7 +282,7 @@ namespace GISBlox.MCP.Server.ToolBase
             int count = items.Count;
 
             if (count == 0)
-               return "_empty collection_";           
+               return "_empty collection_";
 
             return $"[{count} items]";
          }
