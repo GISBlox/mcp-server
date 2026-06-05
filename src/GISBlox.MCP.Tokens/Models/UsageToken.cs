@@ -46,6 +46,12 @@ public record UsageToken
    public int FeatureCount { get; init; }
 
    /// <summary>
+   /// Number of vertices in the response (for GeoJSON FeatureCollection outputs).
+   /// Zero for non-GeoJSON outputs.
+   /// </summary>
+   public int VertexCount { get; set; }
+
+   /// <summary>
    /// Calculated cost based on configured rules (duration, bytes, feature/vertex count).
    /// </summary>
    public double Cost { get; init; }

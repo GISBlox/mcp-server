@@ -22,10 +22,12 @@ public static class ComplexityMeasurer
    /// <param name="data">The tool output data object (typically McpToolOutput.Data).</param>
    /// <param name="outputBytes">The size of the JSON-serialized data in bytes.</param>
    /// <param name="featureCount">The number of features if the data is a GeoJSON FeatureCollection; otherwise 0.</param>
-   public static void Measure(object? data, out long outputBytes, out int featureCount)
+   /// <param name="vertexCount">The number of vertices if the data is a GeoJSON FeatureCollection; otherwise 0.</param>
+   public static void Measure(object? data, out long outputBytes, out int featureCount, out int vertexCount)
    {
       outputBytes = 0;
       featureCount = 0;
+      vertexCount = 0;
 
       if (data == null)
          return;
@@ -53,7 +55,7 @@ public static class ComplexityMeasurer
       }
       catch
       {
-         // Not a valid GeoJSON FeatureCollection, or parsing failed - featureCount remains 0
+         // Not a valid GeoJSON FeatureCollection, or parsing failed - featureCount and vertexCount remain 0
       }
    }
 }

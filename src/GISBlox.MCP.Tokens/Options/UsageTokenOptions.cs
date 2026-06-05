@@ -13,7 +13,7 @@ namespace GISBlox.MCP.Tokens.Options;
 public class UsageTokenOptions
 {
    /// <summary>
-   /// HTTP endpoint URL where usage tokens should be POSTed (e.g., "https://services.gisblox.com/api/usage/ingest").
+   /// HTTP endpoint URL where usage tokens should be POSTed (e.g., "https://services.gisblox.com/api/v1/usage/ingest").
    /// Leave empty to disable HTTP dispatching.
    /// </summary>
    public string IngestUrl { get; set; } = string.Empty;

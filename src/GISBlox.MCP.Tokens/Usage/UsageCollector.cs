@@ -26,7 +26,7 @@ public class UsageCollector(ICallerKeyAccessor callerKeyAccessor, IUsageDispatch
       try
       {
          // Measure complexity
-         ComplexityMeasurer.Measure(resultData, out long outputBytes, out int featureCount);
+         ComplexityMeasurer.Measure(resultData, out long outputBytes, out int featureCount, out int vertexCount);
 
          // Calculate cost
          double cost = CostCalculator.Calculate(outputBytes, durationMs, _options.CostRules);
@@ -42,6 +42,7 @@ public class UsageCollector(ICallerKeyAccessor callerKeyAccessor, IUsageDispatch
             DurationMs = durationMs,
             OutputBytes = outputBytes,
             FeatureCount = featureCount,
+            VertexCount = vertexCount,
             Cost = cost
          };
 
@@ -49,11 +50,12 @@ public class UsageCollector(ICallerKeyAccessor callerKeyAccessor, IUsageDispatch
          await _dispatcher.SendAsync(token, cancellationToken);
 
          _logger.LogDebug(
-             "Recorded usage for {ToolName}: {DurationMs}ms, {OutputBytes} bytes, {FeatureCount} features, cost {Cost:F4}",
+             "Recorded usage for {ToolName}: {DurationMs}ms, {OutputBytes} bytes, {FeatureCount} features, {VertexCount} vertices, cost {Cost:F4}",
              toolName,
              durationMs,
              outputBytes,
              featureCount,
+             vertexCount,
              cost);
       }
       catch (Exception ex)
