@@ -11,9 +11,9 @@ namespace GISBlox.MCP.Tokens.Costing;
 public record CostRules
 {
    /// <summary>
-   /// Divisor for output byte size. Default: 3000 (one cost unit per 3KB).
+   /// Divisor for output byte size. Default: 2000 (one cost unit per 2KB).
    /// </summary>
-   public double ByteDivisor { get; init; } = 3000;
+   public double ByteDivisor { get; init; } = 2000;
 
    /// <summary>
    /// Divisor for execution duration in milliseconds. Default: 40 (one cost unit per 40ms).

@@ -26,10 +26,10 @@ public class UsageCollector(ICallerKeyAccessor callerKeyAccessor, IUsageDispatch
       try
       {
          // Measure complexity
-         ComplexityMeasurer.Measure(resultData, out long outputBytes, out int featureCount, out int vertexCount);
+         ComplexityMeasurer.Measure(toolName, resultData, out long outputBytes, out int featureCount, out int vertexCount);
 
          // Calculate cost
-         double cost = CostCalculator.Calculate(outputBytes, durationMs, _options.CostRules);
+         double cost = CostCalculator.Calculate(outputBytes, durationMs, vertexCount, _options.CostRules);
 
          // Get caller identity
          string? callerKey = _callerKeyAccessor.GetCallerKey();
@@ -48,15 +48,7 @@ public class UsageCollector(ICallerKeyAccessor callerKeyAccessor, IUsageDispatch
 
          // Dispatch (fire-and-forget)
          await _dispatcher.SendAsync(token, cancellationToken);
-
-         _logger.LogDebug(
-             "Recorded usage for {ToolName}: {DurationMs}ms, {OutputBytes} bytes, {FeatureCount} features, {VertexCount} vertices, cost {Cost:F4}",
-             toolName,
-             durationMs,
-             outputBytes,
-             featureCount,
-             vertexCount,
-             cost);
+         
       }
       catch (Exception ex)
       {

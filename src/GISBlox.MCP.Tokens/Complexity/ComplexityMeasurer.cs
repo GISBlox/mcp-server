@@ -31,14 +31,22 @@ public static partial class ComplexityMeasurer
    [GeneratedRegex(@"(-?\d+\.?\d*)\s+(-?\d+\.?\d*)")]
    private static partial Regex CoordinatePairRegex();
 
+   private static readonly HashSet<string> ToolsWithSpatialData = new(StringComparer.Ordinal)
+   {
+      "GeoJsonToWkt", "WktToGeoJson", "PostalCodeLookup", "PostalCodeNeighboursList", "GeometryToPostalCodes", "AreaToPostalCodes",
+      "Wgs84ToRds", "Wgs84ToRdsComplete", "Wgs84ToRdsList", "Wgs84ToRdsCompleteList", "RdsToWgs84", "RdsToWgs84Complete",
+      "RdsToWgs84List", "RdsToWgs84CompleteList"
+   };
+
    /// <summary>
    /// Measures the output byte size, feature count, and vertex count from the tool result data.
    /// </summary>
+   /// <param name="tool">The fully qualified name of the tool (e.g., "Namespace.ToolName").</param>
    /// <param name="data">The tool output data object (typically McpToolOutput.Data).</param>
    /// <param name="outputBytes">The size of the JSON-serialized data in bytes.</param>
    /// <param name="featureCount">The number of features/geometries detected.</param>
    /// <param name="vertexCount">The total number of vertices across all geometries.</param>
-   public static void Measure(object? data, out long outputBytes, out int featureCount, out int vertexCount)
+   public static void Measure(string tool, object? data, out long outputBytes, out int featureCount, out int vertexCount)
    {
       outputBytes = 0;
       featureCount = 0;
@@ -47,22 +55,57 @@ public static partial class ComplexityMeasurer
       if (data == null)
          return;
 
+      // The tool parameter should be in format "Namespace.ToolName", we want to extract "ToolName"
+      string toolName = tool.Split('.')[1];
+
       // Serialize to measure byte size
-      string json = JsonSerializer.Serialize(data, _jsonOptions);
-      outputBytes = System.Text.Encoding.UTF8.GetByteCount(json);
+      byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(data, _jsonOptions);
+      outputBytes = jsonBytes.Length;
 
-      // Parse JSON and analyze structure
-      try
+      if (IsToolThatReturnsSpatialData(toolName))
       {
-         using var doc = JsonDocument.Parse(json);
-         var root = doc.RootElement;
+         try
+         {
+            using var doc = JsonDocument.Parse(jsonBytes);
+            var root = doc.RootElement;
 
-         AnalyzeJsonElement(root, ref featureCount, ref vertexCount);
+            switch (toolName)
+            {
+               case "PostalCodeLookup":
+               case "AreaToPostalCodes":
+               case "GeometryToPostalCodes":
+               case "PostalCodeNeighboursList":
+                  if (root.TryGetProperty("PostalCode", out var postalCodeProp) &&
+                      postalCodeProp.ValueKind == JsonValueKind.Array)
+                  {
+                     featureCount += postalCodeProp.GetArrayLength();
+                     foreach (var item in postalCodeProp.EnumerateArray())
+                     {
+                        if (item.TryGetProperty("Location", out var locationProp) &&
+                            locationProp.TryGetProperty("Geometry", out var geometryProp) &&
+                            geometryProp.TryGetProperty("Vertices", out var verticesProp) &&
+                            verticesProp.ValueKind == JsonValueKind.Number)
+                        {
+                           vertexCount += verticesProp.GetInt32();
+                        }
+                     }
+                  }
+                  break;
+               default:
+                  AnalyzeJsonElement(root, ref featureCount, ref vertexCount);
+                  break;
+            }
+         }
+         catch
+         {
+            // Parsing failed - counts remain 0
+         }
       }
-      catch
-      {
-         // Parsing failed - counts remain 0
-      }
+   }
+
+   private static bool IsToolThatReturnsSpatialData(string toolName)
+   {      
+      return ToolsWithSpatialData.Contains(toolName);
    }
 
    private static void AnalyzeJsonElement(JsonElement element, ref int featureCount, ref int vertexCount)
@@ -75,6 +118,20 @@ public static partial class ComplexityMeasurer
 
          case JsonValueKind.Array:
             AnalyzeArray(element, ref featureCount, ref vertexCount);
+            break;
+
+         case JsonValueKind.String:
+            var stringValue = element.GetString();
+            if (!string.IsNullOrWhiteSpace(stringValue) &&
+                (stringValue[0] == '{' || stringValue[0] == '['))
+            {
+               try
+               {
+                  using var parsed = JsonDocument.Parse(stringValue);
+                  AnalyzeJsonElement(parsed.RootElement, ref featureCount, ref vertexCount);
+               }
+               catch (JsonException) { }
+            }
             break;
       }
    }
@@ -101,18 +158,20 @@ public static partial class ComplexityMeasurer
          return;
       }
 
-      // Pattern 2: Check for precomputed Vertices metadata (e.g., PostalCode API)
-      if (TryExtractMetadataVertices(obj, out int metadataVertices))
-      {
-         vertexCount += metadataVertices;
-         featureCount = Math.Max(featureCount, 1); // At least one feature if we found vertices
-      }
-
-      // Pattern 3: Object with a Geometry property
+      // Pattern 2: Object with a Geometry property
       if (obj.TryGetProperty("Geometry", out var geomProp))
       {
          featureCount = Math.Max(featureCount, 1);
          vertexCount += ExtractVerticesFromGeometryValue(geomProp);
+         return;
+      }
+
+      // Pattern 3: Coordinate object { X, Y } or { Lat, Lon }
+      if ((obj.TryGetProperty("X", out _) && obj.TryGetProperty("Y", out _)) ||
+          (obj.TryGetProperty("Lat", out _) && obj.TryGetProperty("Lon", out _)))
+      {
+         featureCount++;
+         vertexCount += 1;
          return;
       }
 
@@ -125,14 +184,11 @@ public static partial class ComplexityMeasurer
 
    private static void AnalyzeArray(JsonElement array, ref int featureCount, ref int vertexCount)
    {
-      bool hasGeometryProperty = false;
-
       foreach (var item in array.EnumerateArray())
       {
          if (item.ValueKind == JsonValueKind.Object &&
              item.TryGetProperty("Geometry", out var geomProp))
          {
-            hasGeometryProperty = true;
             featureCount++;
             vertexCount += ExtractVerticesFromGeometryValue(geomProp);
          }
@@ -142,52 +198,6 @@ public static partial class ComplexityMeasurer
             AnalyzeJsonElement(item, ref featureCount, ref vertexCount);
          }
       }
-
-      // If it's an array of objects with Geometry, we're done
-      if (hasGeometryProperty)
-         return;
-   }
-
-   private static bool TryExtractMetadataVertices(JsonElement obj, out int vertices)
-   {
-      vertices = 0;
-
-      // Look for nested metadata with Vertices field (e.g., PostalCode -> Location -> Geometry -> Vertices)
-      foreach (var prop in obj.EnumerateObject())
-      {
-         if (prop.Value.ValueKind == JsonValueKind.Object)
-         {
-            if (prop.Value.TryGetProperty("Vertices", out var vertProp) &&
-                vertProp.ValueKind == JsonValueKind.Number)
-            {
-               vertices = vertProp.GetInt32();
-               return true;
-            }
-
-            // Recurse into nested objects
-            if (TryExtractMetadataVertices(prop.Value, out int nested))
-            {
-               vertices = nested;
-               return true;
-            }
-         }
-         else if (prop.Value.ValueKind == JsonValueKind.Array)
-         {
-            // Check array items for nested metadata
-            foreach (var item in prop.Value.EnumerateArray())
-            {
-               if (item.ValueKind == JsonValueKind.Object &&
-                   TryExtractMetadataVertices(item, out int arrayNested))
-               {
-                  vertices += arrayNested;
-               }
-            }
-            if (vertices > 0)
-               return true;
-         }
-      }
-
-      return false;
    }
 
    private static int ExtractVerticesFromGeometryValue(JsonElement geomValue)
@@ -220,20 +230,20 @@ public static partial class ComplexityMeasurer
       var lineMatch = WktLineStringRegex().Match(geom);
       if (lineMatch.Success)
       {
-         return CoordinatePairRegex().Matches(lineMatch.Groups[1].Value).Count;
+         return CoordinatePairRegex().Count(lineMatch.Groups[1].Value);
       }
 
       // Try WKT POLYGON
       var polyMatch = WktPolygonRegex().Match(geom);
       if (polyMatch.Success)
       {
-         return CoordinatePairRegex().Matches(polyMatch.Groups[1].Value).Count;
+         return CoordinatePairRegex().Count(polyMatch.Groups[1].Value);
       }
 
       // Try raw coordinate string (e.g., "POLYGON((4.5 51.9, 4.6 52.0, ...))")
       if (geom.Contains("POLYGON", StringComparison.OrdinalIgnoreCase))
       {
-         return CoordinatePairRegex().Matches(geom).Count;
+         return CoordinatePairRegex().Count(geom);
       }
 
       return 0;
