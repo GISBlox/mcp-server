@@ -11,6 +11,7 @@ namespace GISBlox.MCP.Server.Helpers
    public static class MarkdownHelper
    {
       private enum AnalysisMode { Analysis, Targeting };
+      private const string DATA_ATTRIBUTION = "The data used for this analysis is sourced from CBS and Esri Netherlands. For more information, click this [link](https://www.cbs.nl/nl-nl/dossier/nederland-regionaal/geografische-data/gegevens-per-postcode).";
 
       public static string BuildAudienceAnalysisResponse(string preset, List<AudienceAnalysisResult> results, string? weightsJson)
       {
@@ -38,6 +39,8 @@ namespace GISBlox.MCP.Server.Helpers
                sb.AppendLine("The neutral weight set was used to determine the dominant persona for each postcode.");
                sb.AppendLine("These weights are balanced and do not favor any specific target group.");
                sb.AppendLine();
+               sb.AppendLine($"> {DATA_ATTRIBUTION}");
+               sb.AppendLine();
                break;
 
             case AnalysisMode.Targeting:
@@ -54,6 +57,8 @@ namespace GISBlox.MCP.Server.Helpers
                sb.AppendLine("Only the values included below override the preset defaults.");
                sb.AppendLine();
                sb.AppendLine(BuildAudienceWeightsTable(weightsJson));
+               sb.AppendLine();
+               sb.AppendLine($"> {DATA_ATTRIBUTION}");
                sb.AppendLine();
                break;
 
