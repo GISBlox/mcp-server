@@ -10,21 +10,21 @@ namespace GISBlox.MCP.Server.Infrastructure;
 /// Retrieves the caller's service key from the current HTTP context (Authorization header).
 /// Returns null gracefully when no HTTP context is available (stdio mode, health checks, etc.).
 /// </summary>
-public class CallerKeyAccessor(IHttpContextAccessor httpContextAccessor) : ICallerKeyAccessor
+public class CallerKeyAccessor : ICallerKeyAccessor
 {
-   private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+   private readonly string? _callerKey;
 
-   public string? GetCallerKey()
+   public CallerKeyAccessor(IHttpContextAccessor httpContextAccessor)
    {
-      var context = _httpContextAccessor.HttpContext;
+      var context = httpContextAccessor.HttpContext;
       if (context == null)
-         return null;
+         return;
 
       // Skip health/status endpoints
       if (string.Equals(context.Request.Path, "/health", StringComparison.OrdinalIgnoreCase) ||
           string.Equals(context.Request.Path, "/", StringComparison.OrdinalIgnoreCase))
       {
-         return null;
+         return;
       }
 
       // Extract Bearer token from Authorization header
@@ -36,10 +36,10 @@ public class CallerKeyAccessor(IHttpContextAccessor httpContextAccessor) : ICall
          if (auth.StartsWith(bearerPrefix, StringComparison.OrdinalIgnoreCase))
          {
             var key = auth[bearerPrefix.Length..].Trim();
-            return string.IsNullOrWhiteSpace(key) ? null : key;
+            _callerKey = string.IsNullOrWhiteSpace(key) ? null : key;
          }
       }
-
-      return null;
    }
+
+   public string? GetCallerKey() => _callerKey;
 }

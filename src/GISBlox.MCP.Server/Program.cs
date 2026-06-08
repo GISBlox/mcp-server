@@ -58,6 +58,7 @@ if (httpEnabled && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(
 
 // Register usage token tracking services
 builder.Services.AddUsageTokens(builder.Configuration);
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICallerKeyAccessor, CallerKeyAccessor>();
 
 var mcp = builder.Services
@@ -78,7 +79,6 @@ if (httpEnabled)
 {
     mcp.WithHttpTransport();
 
-    builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<GISBloxClient>(sp =>
     {
         var accessor = sp.GetRequiredService<IHttpContextAccessor>();
