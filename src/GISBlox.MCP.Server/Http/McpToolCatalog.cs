@@ -5,6 +5,7 @@
 using System.Reflection;
 using System.Text.Json;
 using GISBlox.MCP.Server.Attributes;
+using GISBlox.MCP.Server.ToolBase;
 using ModelContextProtocol.Server;
 
 namespace GISBlox.MCP.Server.Http;
@@ -69,6 +70,12 @@ internal static partial class McpRestEndpointsExtensions
          if (!method.IsStatic)
          {
             target = ActivatorUtilities.CreateInstance(sp, type);
+
+            // Inject IUsageCollector if the tool inherits McpToolBase
+            if (target is McpToolBase toolBase)
+            {
+               toolBase.SetUsageCollector(sp.GetService<GISBlox.MCP.Tokens.Usage.IUsageCollector>());
+            }
          }
 
          var args = BuildArguments(method, sp, request.Arguments, ct);

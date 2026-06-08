@@ -35,4 +35,8 @@
     <InternalsVisibleTo Include="GISBlox.MCP.Server.Tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\GISBlox.MCP.Tokens\GISBlox.MCP.Tokens.csproj" />
+  </ItemGroup>
+
 </Project>
