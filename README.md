@@ -33,8 +33,8 @@ To generate a service key:
 
 1. Sign up for a GISBlox account at [gisblox.com/signup](https://account.gisblox.com/registreren)
 2. Navigate to your [Subscriptions Dashboard](https://account.gisblox.com/profiel/abonnementen)
-3. Click the `Add` button and select the **free** subscription to the **GISBlox Location Services** in the dropdown.
-4. Once subscribed, click the **Location Services** tile and copy the service key from the information panel.
+3. Click the `Add` button and select the **free** subscription to the **Location Services AI** in the dropdown.
+4. Once subscribed, click the **Location Services AI** tile and copy the service key from the information panel.
 
 ## 📖 Integration guides
 
